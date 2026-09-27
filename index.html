@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Intelligence Platform — 3D Architecture Visualizations</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800;900&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #020617;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #f1f5f9;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            position: relative;
+            overflow-x: hidden;
+        }
+        .bg-glow {
+            position: fixed;
+            width: 700px;
+            height: 700px;
+            border-radius: 50%;
+            background: radial-gradient(circle, rgba(59, 130, 246, 0.12) 0%, rgba(139, 92, 246, 0.08) 50%, transparent 70%);
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            z-index: 0;
+            filter: blur(80px);
+        }
+        .container {
+            max-width: 1000px;
+            width: 100%;
+            position: relative;
+            z-index: 1;
+            text-align: center;
+        }
+        .badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.35rem 0.9rem;
+            border-radius: 50px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.25);
+            font-size: 0.72rem;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #60a5fa;
+            margin-bottom: 1.25rem;
+        }
+        .badge-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #22c55e;
+            box-shadow: 0 0 10px #22c55e;
+        }
+        h1 {
+            font-size: 2.75rem;
+            font-weight: 900;
+            line-height: 1.15;
+            letter-spacing: -0.035em;
+            background: linear-gradient(135deg, #ffffff 40%, #94a3b8);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 0.85rem;
+        }
+        p.subtitle {
+            font-size: 1.05rem;
+            color: #94a3b8;
+            max-width: 680px;
+            margin: 0 auto 2.5rem;
+            line-height: 1.6;
+        }
+        .cards-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(360px, 1fr));
+            gap: 1.75rem;
+            text-align: left;
+        }
+        .card {
+            background: rgba(15, 23, 42, 0.75);
+            border: 1px solid rgba(148, 163, 184, 0.12);
+            border-radius: 20px;
+            padding: 2rem;
+            backdrop-filter: blur(20px);
+            text-decoration: none;
+            color: inherit;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        .card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .card:hover {
+            transform: translateY(-5px);
+            border-color: rgba(59, 130, 246, 0.4);
+            box-shadow: 0 20px 40px -15px rgba(59, 130, 246, 0.25);
+            background: rgba(30, 41, 59, 0.85);
+        }
+        .card:hover::before {
+            opacity: 1;
+        }
+        .card-tag {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: #60a5fa;
+            letter-spacing: 0.08em;
+            text-transform: uppercase;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.4rem;
+        }
+        .card-tag.cyan { color: #22d3ee; }
+        .card-title {
+            font-size: 1.4rem;
+            font-weight: 800;
+            margin-bottom: 0.65rem;
+            color: #ffffff;
+            letter-spacing: -0.02em;
+        }
+        .card-desc {
+            font-size: 0.88rem;
+            color: #94a3b8;
+            line-height: 1.6;
+            margin-bottom: 1.5rem;
+            flex-grow: 1;
+        }
+        .features-list {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 0.45rem;
+            margin-bottom: 1.75rem;
+        }
+        .features-list li {
+            font-size: 0.8rem;
+            color: #cbd5e1;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .features-list li span {
+            color: #38bdf8;
+            font-weight: 700;
+        }
+        .btn-launch {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2));
+            border: 1px solid rgba(59, 130, 246, 0.4);
+            color: #93c5fd;
+            padding: 0.75rem 1.25rem;
+            border-radius: 12px;
+            font-weight: 600;
+            font-size: 0.88rem;
+            transition: all 0.25s;
+        }
+        .card:hover .btn-launch {
+            background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+            color: #ffffff;
+            border-color: transparent;
+            box-shadow: 0 4px 15px rgba(59, 130, 246, 0.35);
+        }
+        .footer {
+            margin-top: 3.5rem;
+            font-size: 0.75rem;
+            color: #475569;
+            letter-spacing: 0.05em;
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-glow"></div>
+    <div class="container">
+        <div class="badge">
+            <span class="badge-dot"></span> Interactive Proposal Architecture
+        </div>
+        <h1>Marketing Intelligence Platform</h1>
+        <p class="subtitle">Multi-Tenant SaaS Architecture Visualizations. Choose a view below to explore the complete technical stack in interactive 3D WebGL.</p>
+
+        <div class="cards-grid">
+            <!-- Card 1 -->
+            <a href="High-Level-Architecture-3D.html" class="card">
+                <div>
+                    <div class="card-tag">● Blueprint & Flow Paths</div>
+                    <div class="card-title">High-Level Architecture (Command Center)</div>
+                    <div class="card-desc">Concentric radial view displaying all 34 components, 8 zones, and live START → END data flow paths with directional particle streams.</div>
+                    <ul class="features-list">
+                        <li><span>✔</span> 50-Second Automated Architecture Tour</li>
+                        <li><span>✔</span> Clear START → END Flow Markers & Arrows</li>
+                        <li><span>✔</span> Interactive Dependency Spotlight on Click</li>
+                        <li><span>✔</span> Multi-Channel Data Ingestion & RLS Data Flow</li>
+                    </ul>
+                </div>
+                <div class="btn-launch">
+                    Launch Command Center View ➔
+                </div>
+            </a>
+
+            <!-- Card 2 -->
+            <a href="System-Architecture-3D-Visual.html" class="card">
+                <div>
+                    <div class="card-tag cyan">● 16-Week Phase Plan</div>
+                    <div class="card-title">System Architecture (Cinematic Tour)</div>
+                    <div class="card-desc">Layered isometric tower where each build phase materializes layer-by-layer with dramatic camera flythroughs and timeline scrubber.</div>
+                    <ul class="features-list">
+                        <li><span>✔</span> 40-Second Phase-by-Phase Materialization</li>
+                        <li><span>✔</span> Stacked Glass Layers with Unreal Bloom</li>
+                        <li><span>✔</span> Chapter Navigation & Scrubber Timeline</li>
+                        <li><span>✔</span> AI Intelligence & Observability Satellite Pods</li>
+                    </ul>
+                </div>
+                <div class="btn-launch">
+                    Launch Cinematic Tour View ➔
+                </div>
+            </a>
+        </div>
+
+        <div class="footer">
+            Built with Three.js WebGL & Unreal Engine Post-Processing Bloom · Compatible with Desktop & Laptop Chrome, Edge, Safari
+        </div>
+    </div>
+</body>
+</html>

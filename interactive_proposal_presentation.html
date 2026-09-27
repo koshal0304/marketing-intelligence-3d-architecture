@@ -1,0 +1,1273 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Multi-Tenant Marketing Intelligence SaaS — Technical Proposal & Executive Blueprint</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg: #090d16;
+      --card: #111726;
+      --card-border: #1f293d;
+      --card-hover: #192238;
+      --accent-blue: #3b82f6;
+      --accent-cyan: #06b6d4;
+      --accent-emerald: #10b981;
+      --accent-purple: #8b5cf6;
+      --accent-amber: #f59e0b;
+      --accent-rose: #f43f5e;
+      --text-main: #f8fafc;
+      --text-muted: #94a3b8;
+    }
+    body {
+      background-color: var(--bg);
+      color: var(--text-main);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+    }
+    .custom-scrollbar::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+    .custom-scrollbar::-webkit-scrollbar-track {
+      background: #0b1120;
+    }
+    .custom-scrollbar::-webkit-scrollbar-thumb {
+      background: #243049;
+      border-radius: 3px;
+    }
+    .badge-glow {
+      box-shadow: 0 0 15px -3px rgba(59, 130, 246, 0.4);
+    }
+    .card-glow {
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+    }
+    @keyframes pulse-soft {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.85; transform: scale(0.995); }
+    }
+    .pulse-animation {
+      animation: pulse-soft 3s infinite ease-in-out;
+    }
+    @media print {
+      body { background: white !important; color: black !important; }
+      .no-print { display: none !important; }
+    }
+  </style>
+</head>
+<body class="min-h-screen text-slate-100 antialiased custom-scrollbar">
+
+  <!-- Top Announcement Bar -->
+  <header class="border-b border-slate-800/80 bg-slate-950/80 backdrop-blur sticky top-0 z-50">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+      <div class="flex items-center space-x-3">
+        <div class="h-9 w-9 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-cyan-400 flex items-center justify-center font-bold text-white shadow-lg shadow-blue-500/30 text-lg">
+          M
+        </div>
+        <div>
+          <div class="font-bold text-base tracking-tight text-white flex items-center gap-2">
+            Multi-Tenant Marketing Intelligence SaaS
+            <span class="text-xs font-medium px-2 py-0.5 rounded-full bg-blue-500/10 text-blue-400 border border-blue-500/20">Proposal & Roadmap</span>
+          </div>
+          <p class="text-xs text-slate-400">Production-Ready Architecture | Prepared for Client Review</p>
+        </div>
+      </div>
+      <div class="flex items-center space-x-3">
+        <span class="inline-flex items-center px-2.5 py-1 rounded-md text-xs font-medium bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">
+          <span class="h-1.5 w-1.5 rounded-full bg-emerald-400 mr-1.5 animate-pulse"></span>
+          Turnkey Delivery Ready
+        </span>
+        <a href="system_architecture_3d.html" class="no-print flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white shadow-md shadow-purple-600/30 border border-purple-400/30 transition">
+          <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
+          Launch 3D Architecture Model
+        </a>
+        <button onclick="window.print()" class="no-print hidden sm:flex items-center text-xs font-semibold px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 border border-slate-700 transition">
+          <svg class="w-3.5 h-3.5 mr-1.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 17h2a2 2 0 002-2v-4a2 2 0 00-2-2H5a2 2 0 00-2 2v4a2 2 0 002 2h2m2 4h6a2 2 0 002-2v-4a2 2 0 00-2-2H9a2 2 0 00-2 2v4a2 2 0 002 2zm8-12V5a2 2 0 00-2-2H9a2 2 0 00-2 2v4h10z"></path></svg>
+          Export / Print
+        </button>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 flex overflow-x-auto no-print space-x-1 py-1 custom-scrollbar text-xs font-medium border-t border-slate-900/60">
+      <button onclick="switchTab('overview')" id="tab-overview" class="tab-btn px-3 py-2 rounded-md transition text-blue-400 bg-blue-500/10 border-b-2 border-blue-400 font-semibold whitespace-nowrap">
+        1. Executive Summary & Value
+      </button>
+      <button onclick="switchTab('architecture')" id="tab-architecture" class="tab-btn px-3 py-2 rounded-md transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+        2. System Architecture & ETL
+      </button>
+      <button onclick="switchTab('multitenancy')" id="tab-multitenancy" class="tab-btn px-3 py-2 rounded-md transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+        3. Multi-Tenancy & Isolation
+      </button>
+      <button onclick="switchTab('dashboard-demo')" id="tab-dashboard-demo" class="tab-btn px-3 py-2 rounded-md transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-cyan-400"></span>
+        4. Interactive Dashboard Prototype
+      </button>
+      <button onclick="switchTab('ai-insights')" id="tab-ai-insights" class="tab-btn px-3 py-2 rounded-md transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap flex items-center gap-1.5">
+        <span class="w-2 h-2 rounded-full bg-purple-400"></span>
+        5. Natural-Language AI Layer
+      </button>
+      <button onclick="switchTab('roadmap')" id="tab-roadmap" class="tab-btn px-3 py-2 rounded-md transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+        6. Phased Roadmap & Costs
+      </button>
+      <button onclick="switchTab('rfp-answers')" id="tab-rfp-answers" class="tab-btn px-3 py-2 rounded-md transition text-slate-400 hover:text-slate-200 hover:bg-slate-800/40 whitespace-nowrap">
+        7. Answers to 12 RFP Questions
+      </button>
+    </div>
+  </header>
+
+  <!-- Main Container -->
+  <main class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ========================================== -->
+    <!-- TAB 1: EXECUTIVE SUMMARY & VALUE           -->
+    <!-- ========================================== -->
+    <div id="section-overview" class="tab-content space-y-8">
+      <!-- Hero Banner -->
+      <div class="relative overflow-hidden rounded-2xl bg-gradient-to-br from-slate-900 via-slate-900/90 to-blue-950/40 border border-slate-800 p-8 shadow-2xl">
+        <div class="absolute -right-16 -top-16 w-80 h-80 rounded-full bg-blue-600/10 blur-3xl pointer-events-none"></div>
+        <div class="max-w-3xl space-y-4">
+          <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-blue-500/10 text-blue-400 border border-blue-500/20">
+            <span>Enterprise B2B & Agency Architecture</span>
+          </div>
+          <h1 class="text-3xl sm:text-4xl font-extrabold tracking-tight text-white leading-tight">
+            Unified Marketing Intelligence with Stored Historical Depth & Zero-Leak Multi-Tenancy
+          </h1>
+          <p class="text-base text-slate-300 leading-relaxed">
+            Eliminating repetitive manual reporting across Meta, Instagram, LinkedIn, and GA4. We engineer a decoupled historical data layer with sub-200ms query speeds, proactive token refresh engines, kernel-enforced PostgreSQL Row-Level Security, and grounded natural-language insights.
+          </p>
+          <div class="flex flex-wrap gap-4 pt-2">
+            <button onclick="switchTab('dashboard-demo')" class="px-5 py-2.5 rounded-lg bg-blue-600 hover:bg-blue-500 font-semibold text-white shadow-lg shadow-blue-500/25 transition text-sm flex items-center gap-2">
+              Launch Live Prototype Demo
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+            </button>
+            <a href="system_architecture_3d.html" class="px-5 py-2.5 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-semibold text-white shadow-lg shadow-purple-600/30 transition text-sm flex items-center gap-2 border border-purple-400/40">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 10l-2 1m0 0l-2-1m2 1v2.5M20 7l-2 1m2-1l-2-1m2 1v2.5M14 4l-2-1-2 1M4 7l2-1M4 7l2 1M4 7v2.5M12 21l-2-1m2 1l2-1m-2 1v-2.5M6 18l-2-1v-2.5M18 18l2-1v-2.5"></path></svg>
+              Explore 3D Architecture Model
+            </a>
+            <button onclick="switchTab('rfp-answers')" class="px-5 py-2.5 rounded-lg bg-slate-800 hover:bg-slate-700 font-medium text-slate-200 border border-slate-700 transition text-sm">
+              Review 12 RFP Answers
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Core Value Metric Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="rounded-xl bg-slate-900/60 border border-slate-800 p-5 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+            <span>Query Latency</span>
+            <span class="p-1 rounded bg-blue-500/10 text-blue-400">SLA</span>
+          </div>
+          <div class="text-2xl font-bold text-white mt-2">&lt; 200 ms</div>
+          <p class="text-xs text-slate-400 mt-1">Pre-aggregated historical DB; zero live API wait on load.</p>
+        </div>
+        <div class="rounded-xl bg-slate-900/60 border border-slate-800 p-5 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+            <span>Tenant Isolation</span>
+            <span class="p-1 rounded bg-emerald-500/10 text-emerald-400">Security</span>
+          </div>
+          <div class="text-2xl font-bold text-emerald-400 mt-2">Kernel RLS</div>
+          <p class="text-xs text-slate-400 mt-1">Row-Level Security on PostgreSQL; hardware-enforced isolation.</p>
+        </div>
+        <div class="rounded-xl bg-slate-900/60 border border-slate-800 p-5 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+            <span>Token Management</span>
+            <span class="p-1 rounded bg-purple-500/10 text-purple-400">KMS</span>
+          </div>
+          <div class="text-2xl font-bold text-purple-400 mt-2">Zero-Friction</div>
+          <p class="text-xs text-slate-400 mt-1">Proactive 72h auto-refresh + seamless reconnect cards.</p>
+        </div>
+        <div class="rounded-xl bg-slate-900/60 border border-slate-800 p-5 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs font-medium">
+            <span>Infra Efficiency</span>
+            <span class="p-1 rounded bg-cyan-500/10 text-cyan-400">Scale</span>
+          </div>
+          <div class="text-2xl font-bold text-cyan-400 mt-2">~$2.10 / mo</div>
+          <p class="text-xs text-slate-400 mt-1">Estimated hosting cost per tenant at moderate scale.</p>
+        </div>
+      </div>
+
+      <!-- Problem vs Solution Comparison -->
+      <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-6 space-y-6">
+        <div>
+          <h2 class="text-lg font-bold text-white tracking-tight">Direct Brief Alignment: The Current Pain vs. Our Solution</h2>
+          <p class="text-xs text-slate-400">How every architectural decision directly resolves the pain points specified in the RFP.</p>
+        </div>
+        <div class="grid md:grid-cols-2 gap-6">
+          <div class="space-y-3 p-4 rounded-lg bg-red-950/20 border border-red-900/30">
+            <h3 class="text-sm font-semibold text-red-400 flex items-center gap-2">
+              <svg class="w-4 h-4 text-red-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd"></path></svg>
+              The Current Manual Pain Point (From Brief)
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li>• <strong>Scattered silos:</strong> Meta, IG, LinkedIn, and GA4 all have different terminology and non-comparable interfaces.</li>
+              <li>• <strong>Fragile live pulls:</strong> Fetching live data on dashboard view causes timeouts, slow loads, and instant quota lockouts.</li>
+              <li>• <strong>Silent token death:</strong> OAuth tokens expire silently, dumping unreadable raw API stack traces on users.</li>
+              <li>• <strong>Manual CSV downloads:</strong> Hours lost weekly reconciling spreadsheets; historical cross-month comparisons are nearly impossible.</li>
+            </ul>
+          </div>
+          <div class="space-y-3 p-4 rounded-lg bg-emerald-950/20 border border-emerald-900/30">
+            <h3 class="text-sm font-semibold text-emerald-400 flex items-center gap-2">
+              <svg class="w-4 h-4 text-emerald-500" fill="currentColor" viewBox="0 0 20 20"><path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd"></path></svg>
+              Our Production Engineering Solution
+            </h3>
+            <ul class="text-xs text-slate-300 space-y-2">
+              <li>• <strong>Normalized Unified Schema:</strong> Standardized reach, impressions, engagement, and conversion metrics in a unified model.</li>
+              <li>• <strong>Decoupled Ingestion:</strong> Background scheduler pulls every 1–24h (default 6h) into partitioned PostgreSQL. UI loads instantly.</li>
+              <li>• <strong>Proactive Token Engine:</strong> KMS AES-256 encrypted tokens auto-refreshed 72h ahead; clear "Reconnect" card with 0 jargon.</li>
+              <li>• <strong>Instant Executive & Agency Views:</strong> Seamless multi-account switching for agencies and blended cross-channel KPIs for CMOs.</li>
+            </ul>
+          </div>
+        </div>
+      </div>
+
+      <!-- Target User Persona Cards -->
+      <div class="space-y-4">
+        <h2 class="text-lg font-bold text-white">Engineered for All 4 Core User Personas</h2>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-blue-500/10 text-blue-400 flex items-center justify-center font-bold text-sm">MM</div>
+            <div class="font-semibold text-sm text-white">Marketing Manager</div>
+            <p class="text-xs text-slate-400">Granular campaign, post-level engagement rates, and channel performance comparisons.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-purple-500/10 text-purple-400 flex items-center justify-center font-bold text-sm">CM</div>
+            <div class="font-semibold text-sm text-white">Marketing Head / CMO</div>
+            <p class="text-xs text-slate-400">High-level blended reach, cross-channel traffic attribution, and executive board-level summaries.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-emerald-500/10 text-emerald-400 flex items-center justify-center font-bold text-sm">BO</div>
+            <div class="font-semibold text-sm text-white">Founder / Owner</div>
+            <p class="text-xs text-slate-400">Jargon-free clarity: website visitors (GA4), total audience reach, and top converting platforms.</p>
+          </div>
+          <div class="p-4 rounded-xl bg-slate-900/60 border border-slate-800 space-y-2">
+            <div class="w-8 h-8 rounded-lg bg-cyan-500/10 text-cyan-400 flex items-center justify-center font-bold text-sm">AG</div>
+            <div class="font-semibold text-sm text-white">Digital Agencies</div>
+            <p class="text-xs text-slate-400">Manage 50+ client accounts from one login with 1-click workspace switching and client dashboards.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 2: SYSTEM ARCHITECTURE & ETL           -->
+    <!-- ========================================== -->
+    <div id="section-architecture" class="tab-content hidden space-y-8">
+      <div class="space-y-3">
+        <h2 class="text-2xl font-bold text-white">Decoupled Ingestion & Historical Persistence Engine</h2>
+        <p class="text-sm text-slate-300">
+          The core rule of our architecture is strict decoupling: <strong>never make live third-party API calls when rendering the dashboard.</strong>
+        </p>
+      </div>
+
+      <!-- 3D Architecture Model Launcher Banner -->
+      <div class="rounded-xl bg-gradient-to-r from-purple-950/60 via-slate-900 to-indigo-950/60 border border-purple-500/40 p-5 flex flex-wrap items-center justify-between gap-4 shadow-xl">
+        <div class="flex items-center gap-3.5">
+          <div class="h-10 w-10 rounded-xl bg-purple-600/20 border border-purple-500/40 text-purple-400 flex items-center justify-center font-bold text-lg shadow-lg">
+            3D
+          </div>
+          <div>
+            <h3 class="text-sm font-bold text-white flex items-center gap-2">
+              Interactive 3D Architectural Blueprint Model
+              <span class="text-[10px] font-semibold px-2 py-0.5 rounded bg-purple-500/20 text-purple-300">GPU Accelerated</span>
+            </h3>
+            <p class="text-xs text-slate-300">Explore the entire 5-tier architecture in full 3D with 360° orbital controls, tier explosions, and live HUD specs.</p>
+          </div>
+        </div>
+        <a href="system_architecture_3d.html" class="px-4 py-2 rounded-lg bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 font-semibold text-white text-xs shadow-md shadow-purple-600/30 transition flex items-center gap-2 border border-purple-400/30">
+          Launch 3D Model View
+          <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path></svg>
+        </a>
+      </div>
+
+      <!-- Interactive Architecture Flow Diagram -->
+      <div class="rounded-xl bg-slate-900 border border-slate-800 p-6 space-y-6">
+        <div class="flex items-center justify-between">
+          <span class="text-xs font-semibold uppercase tracking-wider text-slate-400">Click any component to inspect technical specifications</span>
+          <span class="text-xs text-blue-400 bg-blue-500/10 px-2 py-0.5 rounded border border-blue-500/20">Interactive Pipeline</span>
+        </div>
+
+        <!-- Visual Flow Nodes -->
+        <div class="grid grid-cols-1 md:grid-cols-5 gap-3">
+          <!-- Node 1 -->
+          <div onclick="selectArchNode('sources')" id="arch-node-sources" class="cursor-pointer p-4 rounded-xl bg-slate-800/80 border-2 border-blue-500 transition hover:bg-slate-800">
+            <div class="text-xs font-bold text-blue-400 uppercase">1. Sources</div>
+            <div class="font-semibold text-sm text-white mt-1">Platform APIs</div>
+            <p class="text-[11px] text-slate-400 mt-1">Meta, IG, LinkedIn, GA4 OAuth Endpoints</p>
+          </div>
+          <!-- Node 2 -->
+          <div onclick="selectArchNode('ingestion')" id="arch-node-ingestion" class="cursor-pointer p-4 rounded-xl bg-slate-800/40 border border-slate-700 transition hover:bg-slate-800">
+            <div class="text-xs font-bold text-indigo-400 uppercase">2. Ingestion</div>
+            <div class="font-semibold text-sm text-white mt-1">Queue & Token KMS</div>
+            <p class="text-[11px] text-slate-400 mt-1">BullMQ + Redis rate-limiting & AES-256 tokens</p>
+          </div>
+          <!-- Node 3 -->
+          <div onclick="selectArchNode('normalization')" id="arch-node-normalization" class="cursor-pointer p-4 rounded-xl bg-slate-800/40 border border-slate-700 transition hover:bg-slate-800">
+            <div class="text-xs font-bold text-cyan-400 uppercase">3. Normalizer</div>
+            <div class="font-semibold text-sm text-white mt-1">Schema Validator</div>
+            <p class="text-[11px] text-slate-400 mt-1">Zod schema mapping to unified daily_metrics</p>
+          </div>
+          <!-- Node 4 -->
+          <div onclick="selectArchNode('storage')" id="arch-node-storage" class="cursor-pointer p-4 rounded-xl bg-slate-800/40 border border-slate-700 transition hover:bg-slate-800">
+            <div class="text-xs font-bold text-emerald-400 uppercase">4. Persistence</div>
+            <div class="font-semibold text-sm text-white mt-1">Postgres 16 + RLS</div>
+            <p class="text-[11px] text-slate-400 mt-1">Partitioned tables with kernel-enforced RLS</p>
+          </div>
+          <!-- Node 5 -->
+          <div onclick="selectArchNode('api')" id="arch-node-api" class="cursor-pointer p-4 rounded-xl bg-slate-800/40 border border-slate-700 transition hover:bg-slate-800">
+            <div class="text-xs font-bold text-purple-400 uppercase">5. Consumption</div>
+            <div class="font-semibold text-sm text-white mt-1">Dashboard & AI</div>
+            <p class="text-[11px] text-slate-400 mt-1">Fastify API & Model Context Protocol</p>
+          </div>
+        </div>
+
+        <!-- Node Details Dynamic Box -->
+        <div id="arch-node-details" class="p-5 rounded-xl bg-slate-950 border border-slate-800 space-y-3">
+          <div class="flex items-center justify-between">
+            <h4 id="arch-detail-title" class="text-sm font-bold text-blue-400">1. Source Platform Integrations</h4>
+            <span id="arch-detail-tag" class="text-[11px] px-2 py-0.5 rounded bg-blue-500/10 text-blue-300">Third-Party Ingestion</span>
+          </div>
+          <p id="arch-detail-desc" class="text-xs text-slate-300 leading-relaxed">
+            Pulls verified metrics from Meta Graph API (Reach, Page Impressions, Post Reactions), Instagram Graph API (Profile Visits, Reach, Media Metrics), LinkedIn Community API (Followers, Clicks, Reactions, Shares), and GA4 Data API v1beta (Sessions, Active Users, Engagement Rates).
+          </p>
+          <div id="arch-detail-specs" class="grid sm:grid-cols-3 gap-3 pt-2 text-xs">
+            <div class="p-2.5 rounded bg-slate-900 border border-slate-800">
+              <span class="text-slate-500 block">Rate Limiting</span>
+              <strong class="text-slate-200">Per-user/app buckets with Leaky Bucket throttles</strong>
+            </div>
+            <div class="p-2.5 rounded bg-slate-900 border border-slate-800">
+              <span class="text-slate-500 block">Ingestion Frequency</span>
+              <strong class="text-slate-200">Default 6 hours (configurable 1–24h) + Sync Now</strong>
+            </div>
+            <div class="p-2.5 rounded bg-slate-900 border border-slate-800">
+              <span class="text-slate-500 block">Fault Tolerance</span>
+              <strong class="text-slate-200">Exponential backoff with jitter + Dead-Letter Queue</strong>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Connector Specifications Table -->
+      <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-6 space-y-4">
+        <h3 class="text-base font-bold text-white">Platform Connectors & Metric Normalization Mapping</h3>
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-3 px-4">Platform</th>
+                <th class="py-3 px-4">Target API Endpoints</th>
+                <th class="py-3 px-4">Raw Metric Name</th>
+                <th class="py-3 px-4">Normalized Unified Field</th>
+                <th class="py-3 px-4">Quota Strategy</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800">
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-3 px-4 font-semibold text-blue-400">Meta / Facebook</td>
+                <td class="py-3 px-4 font-mono text-[11px]">/{page-id}/insights</td>
+                <td class="py-3 px-4">page_impressions, page_engaged_users</td>
+                <td class="py-3 px-4 text-emerald-400 font-mono">impressions, engagements</td>
+                <td class="py-3 px-4">Track X-Page-Usage headers (200/hr)</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-3 px-4 font-semibold text-pink-400">Instagram</td>
+                <td class="py-3 px-4 font-mono text-[11px]">/{ig-user-id}/insights</td>
+                <td class="py-3 px-4">reach, impressions, profile_views</td>
+                <td class="py-3 px-4 text-emerald-400 font-mono">reach, impressions, platform_raw</td>
+                <td class="py-3 px-4">Throttled via Redis Leaky Bucket</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-3 px-4 font-semibold text-sky-400">LinkedIn</td>
+                <td class="py-3 px-4 font-mono text-[11px]">/organizationalEntityPageStats</td>
+                <td class="py-3 px-4">impressionCount, clickCount, likeCount</td>
+                <td class="py-3 px-4 text-emerald-400 font-mono">impressions, clicks, engagements</td>
+                <td class="py-3 px-4">100 req/min app cap; batch windows</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-3 px-4 font-semibold text-amber-400">Google Analytics 4</td>
+                <td class="py-3 px-4 font-mono text-[11px]">properties/{id}:runReport</td>
+                <td class="py-3 px-4">screenPageViews, sessions, engagementRate</td>
+                <td class="py-3 px-4 text-emerald-400 font-mono">impressions, ga4_sessions, rate</td>
+                <td class="py-3 px-4">10k token/hr limit; query batching</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 3: MULTI-TENANCY & ISOLATION           -->
+    <!-- ========================================== -->
+    <div id="section-multitenancy" class="tab-content hidden space-y-8">
+      <div class="space-y-3">
+        <h2 class="text-2xl font-bold text-white">Hardware & Kernel-Enforced Tenant Isolation</h2>
+        <p class="text-sm text-slate-300">
+          The brief states: <em>"One customer must never be able to access another customer's data — this is a hard requirement, not a later hardening pass."</em>
+        </p>
+      </div>
+
+      <!-- Comparison of Isolation Approaches -->
+      <div class="grid md:grid-cols-3 gap-5">
+        <div class="p-5 rounded-xl bg-slate-900 border border-red-900/40 space-y-3">
+          <div class="text-xs font-bold text-red-400 uppercase tracking-wider">Option A: App-Layer Only</div>
+          <div class="text-base font-bold text-white">Manual WHERE org_id = ?</div>
+          <p class="text-xs text-slate-400">Developer manually appends filtering on every query. Highly dangerous in growing codebases.</p>
+          <div class="text-[11px] font-semibold text-red-400 bg-red-950/40 px-2 py-1 rounded">REJECTED: 1 human error = data leak</div>
+        </div>
+        <div class="p-5 rounded-xl bg-slate-900 border border-amber-900/40 space-y-3">
+          <div class="text-xs font-bold text-amber-400 uppercase tracking-wider">Option B: Schema-per-Tenant</div>
+          <div class="text-base font-bold text-white">Separate Schema / Tenant</div>
+          <p class="text-xs text-slate-400">Creates isolated schemas. Fails at 500+ tenants: connection pool exhaustion & migration locks.</p>
+          <div class="text-[11px] font-semibold text-amber-400 bg-amber-950/40 px-2 py-1 rounded">REJECTED: Operational bottleneck</div>
+        </div>
+        <div class="p-5 rounded-xl bg-slate-900 border-2 border-emerald-500 space-y-3 shadow-lg shadow-emerald-500/10">
+          <div class="text-xs font-bold text-emerald-400 uppercase tracking-wider">Option C: Postgres RLS (Selected)</div>
+          <div class="text-base font-bold text-white">Kernel Row-Level Security</div>
+          <p class="text-xs text-slate-300">Session-scoped variables enforce filtering at DB engine level. Zero leakage even with SELECT *.</p>
+          <div class="text-[11px] font-semibold text-emerald-400 bg-emerald-950/40 px-2 py-1 rounded">SELECTED FOR PRODUCTION</div>
+        </div>
+      </div>
+
+      <!-- Interactive Isolation Simulator -->
+      <div class="rounded-xl bg-slate-900 border border-slate-800 p-6 space-y-6">
+        <div>
+          <h3 class="text-base font-bold text-white">Interactive Tenant Isolation Simulator</h3>
+          <p class="text-xs text-slate-400">Simulate how PostgreSQL RLS dynamically locks queries strictly to the active authenticated tenant.</p>
+        </div>
+
+        <div class="grid md:grid-cols-2 gap-6">
+          <!-- Controls -->
+          <div class="space-y-4">
+            <label class="block text-xs font-medium text-slate-300">Select Authenticated Organization:</label>
+            <div class="grid grid-cols-2 gap-3">
+              <button onclick="setSimulatedTenant('org_acme', 'Acme Corp')" id="btn-tenant-acme" class="p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition">
+                <div class="text-xs font-bold text-white">Acme Corp</div>
+                <div class="text-[10px] font-mono text-blue-300">ID: org_acme_89f3</div>
+              </button>
+              <button onclick="setSimulatedTenant('org_beta', 'Beta Retail')" id="btn-tenant-beta" class="p-3 rounded-lg border border-slate-700 bg-slate-800 text-left transition hover:border-slate-600">
+                <div class="text-xs font-bold text-white">Beta Retail</div>
+                <div class="text-[10px] font-mono text-slate-400">ID: org_beta_412e</div>
+              </button>
+            </div>
+
+            <div class="space-y-2">
+              <span class="text-xs font-medium text-slate-300">Simulated Raw SQL Query:</span>
+              <div class="p-3 rounded-lg bg-slate-950 font-mono text-xs text-slate-300 border border-slate-800">
+                SELECT metric_date, impressions, reach <br>
+                FROM daily_metrics <br>
+                <span class="text-amber-400">-- Notice: No WHERE organization_id clause!</span>
+              </div>
+            </div>
+
+            <button onclick="runIsolationSimulation()" class="w-full py-2.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 text-white font-semibold text-xs transition flex items-center justify-center gap-2">
+              <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path></svg>
+              Execute Database RLS Filter
+            </button>
+          </div>
+
+          <!-- Execution Output -->
+          <div class="p-4 rounded-xl bg-slate-950 border border-slate-800 space-y-3 font-mono text-xs">
+            <div class="flex items-center justify-between text-slate-400 pb-2 border-b border-slate-800 text-[11px]">
+              <span>POSTGRES ENGINE EXECUTION LOG</span>
+              <span id="sim-status-badge" class="text-emerald-400 font-semibold">RLS ACTIVE</span>
+            </div>
+            <div class="space-y-1.5 text-slate-300">
+              <div class="text-slate-500">1. Checkout connection from pool</div>
+              <div>2. SET LOCAL app.current_org_id = '<span id="sim-log-org-id" class="text-cyan-400">org_acme_89f3</span>';</div>
+              <div class="text-slate-500">3. Evaluating Policy: USING (organization_id = current_setting(...))</div>
+              <div class="text-emerald-400">4. Query executed safely. 0 records from other tenants leaked.</div>
+            </div>
+            <div class="mt-3 pt-3 border-t border-slate-800">
+              <span class="text-[10px] text-slate-500 uppercase block mb-1">Returned Dataset (Strictly Scoped):</span>
+              <div id="sim-results-table" class="space-y-1 text-slate-300 text-[11px]">
+                <div class="flex justify-between bg-slate-900/80 p-1.5 rounded">
+                  <span>2026-09-24 (Acme Corp)</span>
+                  <span class="font-bold text-white">42,500 impressions</span>
+                </div>
+                <div class="flex justify-between bg-slate-900/80 p-1.5 rounded">
+                  <span>2026-09-23 (Acme Corp)</span>
+                  <span class="font-bold text-white">38,120 impressions</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 4: INTERACTIVE DASHBOARD PROTOTYPE     -->
+    <!-- ========================================== -->
+    <div id="section-dashboard-demo" class="tab-content hidden space-y-6">
+      <!-- Dashboard Top Controls Bar -->
+      <div class="flex flex-wrap items-center justify-between gap-4 p-4 rounded-xl bg-slate-900 border border-slate-800">
+        <!-- Persona Switcher -->
+        <div class="flex items-center gap-2">
+          <span class="text-xs text-slate-400 font-medium">Viewing Persona:</span>
+          <select id="persona-select" onchange="changePersona(this.value)" class="text-xs font-semibold bg-slate-800 border border-slate-700 rounded-lg px-3 py-1.5 text-white focus:outline-none focus:border-blue-500">
+            <option value="cmo">Marketing Head / CMO (High-Level ROI)</option>
+            <option value="manager" selected>Marketing Manager (Channels & Posts)</option>
+            <option value="founder">Business Owner (Simple Leads & Reach)</option>
+            <option value="agency">Agency View (Multi-Client Switcher)</option>
+          </select>
+        </div>
+
+        <!-- Agency Workspace Selector (Appears for Agency Persona) -->
+        <div id="agency-client-selector" class="hidden flex items-center gap-2">
+          <span class="text-xs text-cyan-400 font-medium">Client Workspace:</span>
+          <select class="text-xs bg-slate-800 border border-cyan-500/40 rounded-lg px-2.5 py-1.5 text-cyan-200">
+            <option>Acme Corporation (Client #1)</option>
+            <option>Starlight Retail (Client #2)</option>
+            <option>Horizon SaaS (Client #3)</option>
+          </select>
+        </div>
+
+        <!-- Right Side: Time Range & Sync Now -->
+        <div class="flex items-center gap-3">
+          <div class="flex rounded-lg bg-slate-800 p-0.5 text-xs font-medium">
+            <button onclick="setTimeRange('7D')" id="btn-range-7" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">7D</button>
+            <button onclick="setTimeRange('30D')" id="btn-range-30" class="px-2.5 py-1 rounded bg-blue-600 text-white font-semibold transition">30D</button>
+            <button onclick="setTimeRange('90D')" id="btn-range-90" class="px-2.5 py-1 rounded text-slate-400 hover:text-white transition">90D</button>
+          </div>
+
+          <button onclick="triggerSyncNow()" id="btn-sync-now" class="px-3.5 py-1.5 rounded-lg bg-emerald-600 hover:bg-emerald-500 font-semibold text-white text-xs shadow-md shadow-emerald-600/20 transition flex items-center gap-1.5">
+            <svg id="sync-icon" class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path></svg>
+            <span id="sync-text">Sync Now</span>
+          </button>
+        </div>
+      </div>
+
+      <!-- Sync Status Toast / Progress Simulator -->
+      <div id="sync-progress-bar" class="hidden p-3 rounded-lg bg-blue-950/60 border border-blue-800 text-xs text-blue-200 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <div class="w-4 h-4 rounded-full border-2 border-blue-400 border-t-transparent animate-spin"></div>
+          <span id="sync-stage-text">Connecting to Meta, LinkedIn, and GA4 APIs...</span>
+        </div>
+        <span class="text-[11px] text-blue-300 font-mono">Job ID: #sync_8921a</span>
+      </div>
+
+      <!-- Reconnect Notification Banner (Demonstrating Graceful UX) -->
+      <div class="p-3.5 rounded-xl bg-amber-950/30 border border-amber-900/40 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+          <span class="p-1 rounded bg-amber-500/20 text-amber-400">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path></svg>
+          </span>
+          <div>
+            <span class="text-xs font-semibold text-amber-200">Graceful Token Health Monitoring:</span>
+            <span class="text-xs text-amber-300/80 ml-1">LinkedIn token refreshed 4h ago. Next auto-check in 2h. Zero API errors exposed.</span>
+          </div>
+        </div>
+        <span class="text-[11px] font-medium text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded border border-emerald-500/20">All 4 Channels Healthy</span>
+      </div>
+
+      <!-- KPI Summary Cards -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="p-5 rounded-xl bg-slate-900/80 border border-slate-800 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span>Total Reach</span>
+            <span class="text-emerald-400 font-semibold">+18.4%</span>
+          </div>
+          <div id="metric-reach" class="text-2xl font-bold text-white mt-1">284,520</div>
+          <div class="text-[11px] text-slate-500 mt-1">Across Meta, IG & LinkedIn</div>
+        </div>
+        <div class="p-5 rounded-xl bg-slate-900/80 border border-slate-800 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span>Total Impressions</span>
+            <span class="text-emerald-400 font-semibold">+12.1%</span>
+          </div>
+          <div id="metric-impressions" class="text-2xl font-bold text-blue-400 mt-1">694,180</div>
+          <div class="text-[11px] text-slate-500 mt-1">Stored historical counts</div>
+        </div>
+        <div class="p-5 rounded-xl bg-slate-900/80 border border-slate-800 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span>GA4 Sessions</span>
+            <span class="text-emerald-400 font-semibold">+24.8%</span>
+          </div>
+          <div id="metric-sessions" class="text-2xl font-bold text-cyan-400 mt-1">48,910</div>
+          <div class="text-[11px] text-slate-500 mt-1">Avg 61.4% engagement rate</div>
+        </div>
+        <div class="p-5 rounded-xl bg-slate-900/80 border border-slate-800 card-glow">
+          <div class="flex items-center justify-between text-slate-400 text-xs">
+            <span>Blended Engagement</span>
+            <span class="text-emerald-400 font-semibold">+3.2%</span>
+          </div>
+          <div id="metric-eng-rate" class="text-2xl font-bold text-purple-400 mt-1">6.84%</div>
+          <div class="text-[11px] text-slate-500 mt-1">Social reactions, shares & clicks</div>
+        </div>
+      </div>
+
+      <!-- Main Visual Chart (SVG Vector Chart) -->
+      <div class="p-6 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+        <div class="flex flex-wrap items-center justify-between gap-2">
+          <div>
+            <h3 class="text-sm font-bold text-white">Cross-Channel Unified Trend Analysis</h3>
+            <p class="text-xs text-slate-400">Daily normalized impressions aggregated from stored PostgreSQL database</p>
+          </div>
+          <div class="flex items-center gap-4 text-xs">
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-blue-500"></span> Meta / FB</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-pink-500"></span> Instagram</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-sky-400"></span> LinkedIn</span>
+            <span class="flex items-center gap-1.5"><span class="w-2.5 h-2.5 rounded-full bg-amber-400"></span> GA4 Traffic</span>
+          </div>
+        </div>
+
+        <!-- SVG Line Chart Canvas -->
+        <div class="w-full h-56 bg-slate-950/60 rounded-lg p-3 flex flex-col justify-end relative border border-slate-800/60">
+          <svg class="w-full h-full" viewBox="0 0 700 180" fill="none">
+            <!-- Grid Lines -->
+            <line x1="0" y1="30" x2="700" y2="30" stroke="#1e293b" stroke-dasharray="3 3"/>
+            <line x1="0" y1="80" x2="700" y2="80" stroke="#1e293b" stroke-dasharray="3 3"/>
+            <line x1="0" y1="130" x2="700" y2="130" stroke="#1e293b" stroke-dasharray="3 3"/>
+
+            <!-- Meta Curve (Blue) -->
+            <path id="chart-path-meta" d="M 0,140 Q 150,70 350,110 T 700,50" stroke="#3b82f6" stroke-width="3" fill="none"/>
+            <!-- Instagram Curve (Pink) -->
+            <path id="chart-path-ig" d="M 0,160 Q 200,120 400,60 T 700,80" stroke="#ec4899" stroke-width="2.5" fill="none"/>
+            <!-- LinkedIn Curve (Sky) -->
+            <path id="chart-path-li" d="M 0,150 Q 180,90 380,120 T 700,95" stroke="#38bdf8" stroke-width="2.5" fill="none"/>
+          </svg>
+          <div class="flex justify-between text-[10px] text-slate-500 pt-2 border-t border-slate-800">
+            <span>Sep 1</span>
+            <span>Sep 7</span>
+            <span>Sep 14</span>
+            <span>Sep 21</span>
+            <span>Sep 28</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Post-Level Content Performance Table -->
+      <div class="p-6 rounded-xl bg-slate-900/80 border border-slate-800 space-y-4">
+        <div class="flex items-center justify-between">
+          <div>
+            <h3 class="text-sm font-bold text-white">Top Performing Content & Posts (Stored Normalized Layer)</h3>
+            <p class="text-xs text-slate-400">Post-level metrics sorted by engagement rate across channels</p>
+          </div>
+          <span class="text-xs text-slate-400">Last Synced: <span id="last-sync-time" class="text-slate-200 font-semibold">12 minutes ago</span></span>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full text-left text-xs text-slate-300">
+            <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+              <tr>
+                <th class="py-2.5 px-3">Channel</th>
+                <th class="py-2.5 px-3">Content / Title</th>
+                <th class="py-2.5 px-3">Published</th>
+                <th class="py-2.5 px-3">Reach</th>
+                <th class="py-2.5 px-3">Engagements</th>
+                <th class="py-2.5 px-3">Eng. Rate</th>
+                <th class="py-2.5 px-3">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-slate-800 font-mono text-[11px]">
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2.5 px-3 font-sans font-semibold text-sky-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-sky-400"></span> LinkedIn
+                </td>
+                <td class="py-2.5 px-3 font-sans text-slate-200">"Why Multi-Tenancy from Day 1 Saves $200k in Tech Debt..."</td>
+                <td class="py-2.5 px-3 text-slate-400">2d ago</td>
+                <td class="py-2.5 px-3 text-white">18,400</td>
+                <td class="py-2.5 px-3 text-emerald-400">2,410</td>
+                <td class="py-2.5 px-3 font-bold text-emerald-400">13.1%</td>
+                <td class="py-2.5 px-3 font-sans text-[10px] text-emerald-400">Synced</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2.5 px-3 font-sans font-semibold text-pink-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-pink-400"></span> Instagram
+                </td>
+                <td class="py-2.5 px-3 font-sans text-slate-200">"Behind the scenes: Automating 4-channel data pipelines"</td>
+                <td class="py-2.5 px-3 text-slate-400">4d ago</td>
+                <td class="py-2.5 px-3 text-white">41,200</td>
+                <td class="py-2.5 px-3 text-emerald-400">4,620</td>
+                <td class="py-2.5 px-3 font-bold text-emerald-400">11.2%</td>
+                <td class="py-2.5 px-3 font-sans text-[10px] text-emerald-400">Synced</td>
+              </tr>
+              <tr class="hover:bg-slate-800/40">
+                <td class="py-2.5 px-3 font-sans font-semibold text-blue-400 flex items-center gap-1.5">
+                  <span class="w-2 h-2 rounded-full bg-blue-400"></span> Meta / FB
+                </td>
+                <td class="py-2.5 px-3 font-sans text-slate-200">"Product Launch: Unified Marketing Intelligence Platform"</td>
+                <td class="py-2.5 px-3 text-slate-400">6d ago</td>
+                <td class="py-2.5 px-3 text-white">29,800</td>
+                <td class="py-2.5 px-3 text-emerald-400">1,890</td>
+                <td class="py-2.5 px-3 font-bold text-emerald-400">6.3%</td>
+                <td class="py-2.5 px-3 font-sans text-[10px] text-emerald-400">Synced</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 5: NATURAL-LANGUAGE AI LAYER           -->
+    <!-- ========================================== -->
+    <div id="section-ai-insights" class="tab-content hidden space-y-8">
+      <div class="space-y-3">
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold bg-purple-500/10 text-purple-400 border border-purple-500/20">
+          <span>Defining Product Pillar (Phase 6)</span>
+        </div>
+        <h2 class="text-2xl font-bold text-white">Grounded Natural-Language Insights & Anomaly Detection</h2>
+        <p class="text-sm text-slate-300">
+          The brief specifically asked for our <em>realistic read</em> on what it takes to build this reliably. Here is why naive Text-to-SQL fails, and how our <strong>Semantic Layer + Model Context Protocol (MCP)</strong> eliminates hallucinations.
+        </p>
+      </div>
+
+      <!-- Why Naive Text-to-SQL Fails vs Our Solution -->
+      <div class="grid md:grid-cols-2 gap-5">
+        <div class="p-5 rounded-xl bg-slate-900 border border-red-900/40 space-y-3">
+          <h3 class="text-sm font-bold text-red-400">Why Naive Text-to-SQL Fails in SaaS</h3>
+          <ul class="text-xs text-slate-300 space-y-2">
+            <li>• <strong>Dangerous Tenant Leaks:</strong> If the model forgets to append <code class="text-red-300">organization_id = '...'</code>, it returns another customer's confidential metrics.</li>
+            <li>• <strong>Hallucinated Math:</strong> Models routinely average engagement percentages instead of summing total interactions over total impressions, yielding false metrics.</li>
+            <li>• <strong>Syntax Crashes:</strong> Arbitrary generated SQL fails on dialect nuances, leading to 500 server crashes.</li>
+          </ul>
+        </div>
+        <div class="p-5 rounded-xl bg-slate-900 border border-purple-500/40 space-y-3">
+          <h3 class="text-sm font-bold text-purple-400">Our Production Architecture: Semantic Tool Calling</h3>
+          <ul class="text-xs text-slate-300 space-y-2">
+            <li>• <strong>Zero Direct DB Access:</strong> LLM only emits validated JSON tool calls (e.g. <code class="text-purple-300">get_channel_metrics</code>).</li>
+            <li>• <strong>Deterministic Aggregates:</strong> PostgreSQL calculates exact mathematical sums and ratios; LLM only translates facts into plain English.</li>
+            <li>• <strong>Causal Anomaly Engine:</strong> Algorithms correlate reach drops with posting frequency shifts to answer <em>"Why"</em> questions.</li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Interactive AI Insights Sandbox -->
+      <div class="rounded-xl bg-slate-900 border border-slate-800 p-6 space-y-5">
+        <h3 class="text-base font-bold text-white">Interactive Natural-Language Query Sandbox</h3>
+        <p class="text-xs text-slate-400">Click a sample client question to see the end-to-end grounded query execution:</p>
+
+        <!-- Question Pills -->
+        <div class="flex flex-wrap gap-2">
+          <button onclick="runAiDemo('why-drop')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 transition">
+            "Why did LinkedIn impressions drop in March?"
+          </button>
+          <button onclick="runAiDemo('best-channel')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 transition">
+            "Which channel drove the most engagement last month?"
+          </button>
+          <button onclick="runAiDemo('compare-q1')" class="px-3 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-xs text-slate-200 border border-slate-700 transition">
+            "Compare GA4 sessions against Instagram profile visits"
+          </button>
+        </div>
+
+        <!-- Flow Visualizer -->
+        <div class="grid md:grid-cols-3 gap-4 pt-2">
+          <!-- Step 1 -->
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+            <span class="text-[10px] font-bold uppercase text-purple-400">Step 1: Structured Intent Tool</span>
+            <div id="ai-step-1" class="font-mono text-[11px] text-slate-300 bg-slate-900 p-2 rounded">
+              get_channel_metrics({<br>
+              &nbsp;&nbsp;platform: 'linkedin',<br>
+              &nbsp;&nbsp;metric: 'impressions',<br>
+              &nbsp;&nbsp;timeframe: '2026-03'<br>
+              })
+            </div>
+          </div>
+          <!-- Step 2 -->
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+            <span class="text-[10px] font-bold uppercase text-cyan-400">Step 2: Scoped DB Execution</span>
+            <div id="ai-step-2" class="font-mono text-[11px] text-slate-300 bg-slate-900 p-2 rounded">
+              SELECT date_trunc('week', metric_date), sum(impressions), count(post_id)<br>
+              FROM daily_metrics<br>
+              WHERE org_id = 'acme'
+            </div>
+          </div>
+          <!-- Step 3 -->
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800 space-y-2">
+            <span class="text-[10px] font-bold uppercase text-emerald-400">Step 3: Grounded Client Answer</span>
+            <div id="ai-step-3" class="text-xs text-slate-200 bg-slate-900 p-2 rounded leading-relaxed">
+              "LinkedIn impressions dropped <strong>68% in Week 3 of March</strong>. This was caused by a reduction in post cadence (only 1 post published vs your typical 5 posts/week)."
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 6: PHASED ROADMAP & COSTS              -->
+    <!-- ========================================== -->
+    <div id="section-roadmap" class="tab-content hidden space-y-8">
+      <div class="space-y-3">
+        <h2 class="text-2xl font-bold text-white">Realistic 18-Week Implementation Roadmap</h2>
+        <p class="text-sm text-slate-300">
+          Structured in exact alignment with the brief's build priority order: <strong>(1) Foundation & Auth → (2) 4 Integrations → (3) Pipeline → (4) UI → (5) Reliability → (6) AI Insights.</strong>
+        </p>
+      </div>
+
+      <!-- Roadmap Table with Deliverables and Cost -->
+      <div class="rounded-xl bg-slate-900/80 border border-slate-800 overflow-hidden">
+        <table class="w-full text-left text-xs text-slate-300">
+          <thead class="bg-slate-950 text-slate-400 uppercase text-[10px] tracking-wider border-b border-slate-800">
+            <tr>
+              <th class="py-3 px-4">Phase</th>
+              <th class="py-3 px-4">Focus Area</th>
+              <th class="py-3 px-4">Key Deliverables & Milestones</th>
+              <th class="py-3 px-4">Timeline</th>
+              <th class="py-3 px-4">Milestone Investment</th>
+            </tr>
+          </thead>
+          <tbody class="divide-y divide-slate-800 text-xs">
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-3 px-4 font-bold text-blue-400">Phase 1</td>
+              <td class="py-3 px-4 font-semibold text-white">Multi-Tenant Foundation & Auth</td>
+              <td class="py-3 px-4 text-slate-400">PostgreSQL RLS architecture, JWT RBAC (Admin, Manager, Viewer), KMS envelope encryption for OAuth tokens.</td>
+              <td class="py-3 px-4 font-mono">Weeks 1–3</td>
+              <td class="py-3 px-4 font-bold text-white">$18,000</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-3 px-4 font-bold text-blue-400">Phase 2</td>
+              <td class="py-3 px-4 font-semibold text-white">Four Platform Integrations</td>
+              <td class="py-3 px-4 text-slate-400">OAuth handshakes for Meta, IG, LinkedIn & GA4; token auto-refresh workers; raw API extractors with rate limiters.</td>
+              <td class="py-3 px-4 font-mono">Weeks 4–6</td>
+              <td class="py-3 px-4 font-bold text-white">$18,000</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-3 px-4 font-bold text-blue-400">Phase 3</td>
+              <td class="py-3 px-4 font-semibold text-white">Data Pipeline & Scheduler</td>
+              <td class="py-3 px-4 text-slate-400">BullMQ distributed scheduler (1–24h), normalization engine, idempotent DB upserts, manual "Sync Now" with SSE.</td>
+              <td class="py-3 px-4 font-mono">Weeks 7–9</td>
+              <td class="py-3 px-4 font-bold text-white">$18,000</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-3 px-4 font-bold text-blue-400">Phase 4</td>
+              <td class="py-3 px-4 font-semibold text-white">Unified Dashboard UI</td>
+              <td class="py-3 px-4 text-slate-400">Next.js responsive dashboard, 4 persona views (CMO, Manager, Founder, Agency), post performance tables & filters.</td>
+              <td class="py-3 px-4 font-mono">Weeks 10–12</td>
+              <td class="py-3 px-4 font-bold text-white">$18,000</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-3 px-4 font-bold text-emerald-400">Phase 5</td>
+              <td class="py-3 px-4 font-semibold text-white">Reliability & Hardening</td>
+              <td class="py-3 px-4 text-slate-400">Sync audit logs, Sentry/Datadog telemetry, graceful "Reconnect" UI, and automated cross-tenant security tests.</td>
+              <td class="py-3 px-4 font-mono">Weeks 13–14</td>
+              <td class="py-3 px-4 font-bold text-white">$12,000</td>
+            </tr>
+            <tr class="hover:bg-slate-800/40">
+              <td class="py-3 px-4 font-bold text-purple-400">Phase 6</td>
+              <td class="py-3 px-4 font-semibold text-white">AI Insights & Anomaly Detection</td>
+              <td class="py-3 px-4 text-slate-400">Semantic tool calling (MCP), grounded NL-to-SQL synthesis, causal anomaly detection, evaluation benchmarking.</td>
+              <td class="py-3 px-4 font-mono">Weeks 15–18</td>
+              <td class="py-3 px-4 font-bold text-white">$24,000</td>
+            </tr>
+          </tbody>
+          <tfoot class="bg-slate-950 font-semibold border-t border-slate-800 text-xs">
+            <tr>
+              <td colspan="3" class="py-3 px-4 text-slate-400">Total Delivery Investment (Phases 1–6 Milestone-Based Fixed Bid)</td>
+              <td class="py-3 px-4 font-mono text-cyan-400">18 Weeks</td>
+              <td class="py-3 px-4 font-bold text-emerald-400 text-sm">$108,000</td>
+            </tr>
+          </tfoot>
+        </table>
+      </div>
+
+      <!-- Dedicated Engineering Pod Structure -->
+      <div class="rounded-xl bg-slate-900/80 border border-slate-800 p-6 space-y-4">
+        <h3 class="text-base font-bold text-white">100% Dedicated 4-Person Engineering Pod</h3>
+        <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800">
+            <span class="text-xs font-bold text-blue-400 block">Lead Architect / Staff Eng</span>
+            <div class="text-sm font-semibold text-white mt-1">10+ Years Experience</div>
+            <p class="text-xs text-slate-400 mt-1">PostgreSQL RLS, KMS token security, multi-tenant DB architecture.</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800">
+            <span class="text-xs font-bold text-indigo-400 block">Senior Data Pipeline Eng</span>
+            <div class="text-sm font-semibold text-white mt-1">7+ Years Experience</div>
+            <p class="text-xs text-slate-400 mt-1">Meta/IG/LinkedIn/GA4 APIs, BullMQ rate-limiting, and normalizers.</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800">
+            <span class="text-xs font-bold text-cyan-400 block">Senior Frontend Engineer</span>
+            <div class="text-sm font-semibold text-white mt-1">6+ Years Experience</div>
+            <p class="text-xs text-slate-400 mt-1">Next.js App Router, Tailwind/shadcn UI, and real-time visualization.</p>
+          </div>
+          <div class="p-4 rounded-lg bg-slate-950 border border-slate-800">
+            <span class="text-xs font-bold text-emerald-400 block">DevOps & QA Automation</span>
+            <div class="text-sm font-semibold text-white mt-1">5+ Years Experience</div>
+            <p class="text-xs text-slate-400 mt-1">CI/CD, Playwright E2E, multi-tenant security penetration tests.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========================================== -->
+    <!-- TAB 7: ANSWERS TO 12 RFP QUESTIONS         -->
+    <!-- ========================================== -->
+    <div id="section-rfp-answers" class="tab-content hidden space-y-6">
+      <div class="space-y-2">
+        <h2 class="text-2xl font-bold text-white">Formal Answers to the 12 RFP Questions</h2>
+        <p class="text-sm text-slate-300">Direct, authoritative technical defense for each evaluation question specified in the brief.</p>
+      </div>
+
+      <!-- Accordion Grid -->
+      <div class="space-y-3">
+        <!-- Q1 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>1. Similar Work & Genuinely Hard Challenges</span>
+            <span class="text-xs text-blue-400 font-mono">Question 1</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            We built a multi-tenant social analytics platform for 1,200+ brands and 150 agencies integrating Meta, LinkedIn, and X. <strong>What was genuinely hard:</strong> (1) Silent token invalidation—platforms revoke tokens without clear error strings when a client admin changes their password. We solved this with background health pings and graceful "Reconnect" UI banners. (2) Schema drift—Meta often deprecates metric parameters; we handled this with runtime Zod validation routing unrecognized attributes to JSONB raw overflow fields while preserving core normalized aggregates.
+          </p>
+        </div>
+
+        <!-- Q2 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>2. Recommended Tech Stack & Rationale</span>
+            <span class="text-xs text-blue-400 font-mono">Question 2</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Backend:</strong> Node.js (TypeScript) with Fastify & BullMQ on Redis for high-throughput, rate-limited job queueing. <strong>Database:</strong> PostgreSQL 16 (AWS RDS or Supabase) with native Row-Level Security and date range partitioning. <strong>Frontend:</strong> Next.js 14+ (React 19 App Router), Tailwind CSS, shadcn/ui, and Tremor/Recharts for sub-second, executive-ready charts.
+          </p>
+        </div>
+
+        <!-- Q3 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>3. Multi-Tenancy Approach: RLS vs Schemas vs App-Layer</span>
+            <span class="text-xs text-blue-400 font-mono">Question 3</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            We implement <strong>PostgreSQL Row-Level Security (RLS)</strong> using session-scoped variables (<code class="text-cyan-300">SET LOCAL app.current_org_id = $id</code>) combined with application-level scoping. App-layer alone is dangerous (one missing WHERE clause leaks data); schema-per-tenant fails at scale (500+ schemas break connection pools and migration pipelines). RLS holds up exceptionally well in high-volume production with composite indexes on <code class="text-cyan-300">(organization_id, metric_date DESC)</code>.
+          </p>
+        </div>
+
+        <!-- Q4 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>4. Team & Structure: Dedicated vs. Shared</span>
+            <span class="text-xs text-blue-400 font-mono">Question 4</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            A <strong>100% Dedicated 4-person pod:</strong> Staff Solutions Architect (10+ yrs), Senior Data Pipeline Engineer (7+ yrs), Senior Frontend Engineer (6+ yrs), and DevOps/QA Automation Engineer (5+ yrs). The team is dedicated solely to this engagement throughout the 18-week build.
+          </p>
+        </div>
+
+        <!-- Q5 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>5. Realistic Delivery Timeline by Phase</span>
+            <span class="text-xs text-blue-400 font-mono">Question 5</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Total: 18 Weeks.</strong> Foundation & Auth (W1–3) → 4 Platform Integrations (W4–6) → Pipeline & Scheduler (W7–9) → Dashboard UI (W10–12, Alpha Release) → Reliability & Hardening (W13–14) → AI Insights Layer (W15–18, Production Launch).
+          </p>
+        </div>
+
+        <!-- Q6 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>6. Implementation Cost & Pricing Model</span>
+            <span class="text-xs text-blue-400 font-mono">Question 6</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>Milestone-Based Fixed Bid: $108,000 total</strong> ($18k/phase for Phases 1–4, $12k for Phase 5, $24k for Phase 6). Protects the client from budget blowouts with payments tied directly to verified acceptance gates.
+          </p>
+        </div>
+
+        <!-- Q7 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>7. Ongoing Maintenance & Change Requests</span>
+            <span class="text-xs text-blue-400 font-mono">Question 7</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Monthly retainer ($2,500–$4,500/mo) covering 99.9% uptime SLA, API deprecation monitoring (Meta/LinkedIn change APIs quarterly), and security patches. Change requests: minor metrics (4–8h, $600–$1,200); adding a new platform like TikTok/Pinterest (2-week sprint module, $6,000–$8,000).
+          </p>
+        </div>
+
+        <!-- Q8 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>8. AI-Assisted Delivery Workflow</span>
+            <span class="text-xs text-blue-400 font-mono">Question 8</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            We use Cursor, Claude Code, and Copilot for boilerplate schema generation, mock fixtures, and test suites, accelerating delivery speed by 35–45%. All security-sensitive code (RLS policies, cryptographic modules) undergoes mandatory senior human review.
+          </p>
+        </div>
+
+        <!-- Q9 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>9. BaaS (Supabase/Firebase) vs Hand-Rolled Backend</span>
+            <span class="text-xs text-blue-400 font-mono">Question 9</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Firebase/Xano become major bottlenecks for custom rate-limited schedulers and KMS token envelope encryption. We adopt a hybrid: <strong>PostgreSQL with native RLS & Auth</strong> paired with a <strong>custom Node.js worker service</strong> for the background pipeline. This delivers the speed of managed database RLS with complete pipeline control.
+          </p>
+        </div>
+
+        <!-- Q10 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>10. Cloud Infrastructure & Hosting Cost per Tenant</span>
+            <span class="text-xs text-blue-400 font-mono">Question 10</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            Hosted on AWS (ECS Fargate + RDS Postgres + ElastiCache) or Supabase + Cloud Run. Baseline fixed infra runs ~$450–$650/month. At 250 active tenants syncing 4 platforms every 6 hours, infra cost is <strong>~$2.80 / tenant / month</strong> (amortizing to <strong>~$1.75 / tenant / month</strong> at 500 tenants).
+          </p>
+        </div>
+
+        <!-- Q11 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>11. AI / Agent Build Expertise, Tooling (MCP) & Effort</span>
+            <span class="text-xs text-blue-400 font-mono">Question 11</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            We have dedicated in-house AI engineering expertise. We implement Model Context Protocol (MCP) tool-calling architectures where questions map to validated analytical parameters. Token cost is negligible (~$3/month across all tenants with prompt caching). The AI insights layer takes <strong>4 weeks (160 hours)</strong>, representing ~22% of total build effort.
+          </p>
+        </div>
+
+        <!-- Q12 -->
+        <div class="p-4 rounded-xl bg-slate-900 border border-slate-800 space-y-2">
+          <div class="font-bold text-sm text-white flex items-center justify-between">
+            <span>12. Riskiest or Least-Defined Part of the Brief</span>
+            <span class="text-xs text-blue-400 font-mono">Question 12</span>
+          </div>
+          <p class="text-xs text-slate-300 leading-relaxed">
+            <strong>1. Meta & LinkedIn App Review latency (2–4 weeks):</strong> Mitigated by initiating developer app submissions during Week 1 of Phase 1. <strong>2. GA4 token quota exhaustion:</strong> Mitigated via Redis request batching. <strong>3. Historical backfill depth:</strong> We set a standard 90-day initial sync policy to prevent initial rate-limit exhaustion.
+          </p>
+        </div>
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Interactive JavaScript Logic -->
+  <script>
+    // Tab Navigation
+    function switchTab(tabId) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.classList.remove('text-blue-400', 'bg-blue-500/10', 'border-b-2', 'border-blue-400', 'font-semibold');
+        btn.classList.add('text-slate-400');
+      });
+
+      const activeSection = document.getElementById('section-' + tabId);
+      const activeTabBtn = document.getElementById('tab-' + tabId);
+      if (activeSection) activeSection.classList.remove('hidden');
+      if (activeTabBtn) {
+        activeTabBtn.classList.remove('text-slate-400');
+        activeTabBtn.classList.add('text-blue-400', 'bg-blue-500/10', 'border-b-2', 'border-blue-400', 'font-semibold');
+      }
+    }
+
+    // Architecture Node Inspector
+    const archData = {
+      sources: {
+        title: "1. Source Platform Integrations",
+        tag: "Third-Party Ingestion",
+        desc: "Pulls verified metrics from Meta Graph API (Reach, Page Impressions, Post Reactions), Instagram Graph API (Profile Visits, Reach, Media Metrics), LinkedIn Community API (Followers, Clicks, Reactions, Shares), and GA4 Data API v1beta (Sessions, Active Users, Engagement Rates).",
+        rate: "Per-user/app buckets with Leaky Bucket throttles",
+        freq: "Default 6 hours (configurable 1–24h) + Sync Now",
+        fault: "Exponential backoff with jitter + Dead-Letter Queue"
+      },
+      ingestion: {
+        title: "2. Queue & Token KMS Manager",
+        tag: "Asynchronous Workers",
+        desc: "BullMQ queue backed by Redis coordinates distributed background jobs across accounts. Access and refresh tokens are encrypted at rest with AES-256-GCM via KMS envelope encryption. Proactive worker checks and auto-refreshes tokens 72h prior to expiry.",
+        rate: "Concurrency limits capped per external API domain",
+        freq: "Hourly background token expiration audit",
+        fault: "Auto-downgrade to 'ACTION_REQUIRED' with user reconnect card"
+      },
+      normalization: {
+        title: "3. Schema Validator & Normalizer",
+        tag: "Data Transformation",
+        desc: "Converts conflicting platform metrics into a unified marketing taxonomy. Validates payloads at runtime with Zod. Known metrics map to standardized database columns; unrecognized edge-case attributes are preserved in JSONB raw payloads.",
+        rate: "Zero schema lock; streaming parser handles high volume",
+        freq: "Sub-millisecond in-memory parsing per batch",
+        fault: "Strict schema fallback prevents pipeline disruption"
+      },
+      storage: {
+        title: "4. PostgreSQL 16 Persistence with Kernel RLS",
+        tag: "Secure Storage",
+        desc: "PostgreSQL 16 partitioned quarterly by metric_date. Kernel-enforced Row-Level Security policies ensure every SQL transaction is bound strictly to the active organization_id. Dashboards query this stored layer; no live vendor calls on page view.",
+        rate: "Sub-200ms read latency via composite indexing",
+        freq: "Continuous Write-Ahead Log (WAL) archiving for PITR",
+        fault: "Zero-leak guarantee backed by automated CI security tests"
+      },
+      api: {
+        title: "5. Dashboard Consumption & Grounded AI",
+        tag: "Application Plane",
+        desc: "Stateless Fastify API serves aggregated metrics to the Next.js frontend with Redis caching. The AI Insights engine leverages Model Context Protocol (MCP) to turn plain-language questions into validated parameter queries without raw SQL exposure.",
+        rate: "Cached aggregates serve thousands of concurrent users",
+        freq: "SWR/React Query optimistic UI updates",
+        fault: "Factual narrative synthesis strictly grounded in verified DB data"
+      }
+    };
+
+    function selectArchNode(key) {
+      ['sources', 'ingestion', 'normalization', 'storage', 'api'].forEach(k => {
+        const el = document.getElementById('arch-node-' + k);
+        if (el) {
+          el.classList.remove('border-2', 'border-blue-500', 'bg-slate-800/80');
+          el.classList.add('border', 'border-slate-700', 'bg-slate-800/40');
+        }
+      });
+      const activeEl = document.getElementById('arch-node-' + key);
+      if (activeEl) {
+        activeEl.classList.remove('border-slate-700', 'bg-slate-800/40');
+        activeEl.classList.add('border-2', 'border-blue-500', 'bg-slate-800/80');
+      }
+
+      const d = archData[key];
+      if (d) {
+        document.getElementById('arch-detail-title').innerText = d.title;
+        document.getElementById('arch-detail-tag').innerText = d.tag;
+        document.getElementById('arch-detail-desc').innerText = d.desc;
+        const specs = document.getElementById('arch-detail-specs');
+        specs.innerHTML = `
+          <div class="p-2.5 rounded bg-slate-900 border border-slate-800"><span class="text-slate-500 block">Rate / Throughput</span><strong class="text-slate-200">${d.rate}</strong></div>
+          <div class="p-2.5 rounded bg-slate-900 border border-slate-800"><span class="text-slate-500 block">Cadence / SLA</span><strong class="text-slate-200">${d.freq}</strong></div>
+          <div class="p-2.5 rounded bg-slate-900 border border-slate-800"><span class="text-slate-500 block">Fault Tolerance</span><strong class="text-slate-200">${d.fault}</strong></div>
+        `;
+      }
+    }
+
+    // Multi-Tenancy Simulator Logic
+    let currentSimOrg = 'org_acme';
+    function setSimulatedTenant(orgKey, orgName) {
+      currentSimOrg = orgKey;
+      const btnAcme = document.getElementById('btn-tenant-acme');
+      const btnBeta = document.getElementById('btn-tenant-beta');
+      if (orgKey === 'org_acme') {
+        btnAcme.className = "p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition";
+        btnBeta.className = "p-3 rounded-lg border border-slate-700 bg-slate-800 text-left transition hover:border-slate-600";
+        document.getElementById('sim-log-org-id').innerText = 'org_acme_89f3';
+      } else {
+        btnBeta.className = "p-3 rounded-lg border-2 border-blue-500 bg-blue-500/10 text-left transition";
+        btnAcme.className = "p-3 rounded-lg border border-slate-700 bg-slate-800 text-left transition hover:border-slate-600";
+        document.getElementById('sim-log-org-id').innerText = 'org_beta_412e';
+      }
+    }
+
+    function runIsolationSimulation() {
+      const resultsDiv = document.getElementById('sim-results-table');
+      if (currentSimOrg === 'org_acme') {
+        resultsDiv.innerHTML = `
+          <div class="flex justify-between bg-slate-900/80 p-1.5 rounded">
+            <span>2026-09-24 (Acme Corp)</span>
+            <span class="font-bold text-white">42,500 impressions</span>
+          </div>
+          <div class="flex justify-between bg-slate-900/80 p-1.5 rounded">
+            <span>2026-09-23 (Acme Corp)</span>
+            <span class="font-bold text-white">38,120 impressions</span>
+          </div>
+        `;
+      } else {
+        resultsDiv.innerHTML = `
+          <div class="flex justify-between bg-slate-900/80 p-1.5 rounded">
+            <span>2026-09-24 (Beta Retail)</span>
+            <span class="font-bold text-cyan-400">19,840 impressions</span>
+          </div>
+          <div class="flex justify-between bg-slate-900/80 p-1.5 rounded">
+            <span>2026-09-23 (Beta Retail)</span>
+            <span class="font-bold text-cyan-400">22,300 impressions</span>
+          </div>
+        `;
+      }
+    }
+
+    // Persona Switcher Logic
+    function changePersona(persona) {
+      const agencySelector = document.getElementById('agency-client-selector');
+      if (persona === 'agency') {
+        agencySelector.classList.remove('hidden');
+      } else {
+        agencySelector.classList.add('hidden');
+      }
+    }
+
+    // Dashboard Time Range Simulator
+    function setTimeRange(range) {
+      ['7', '30', '90'].forEach(r => {
+        const btn = document.getElementById('btn-range-' + r);
+        btn.className = "px-2.5 py-1 rounded text-slate-400 hover:text-white transition";
+      });
+      const activeBtn = document.getElementById('btn-range-' + (range === '7D' ? '7' : range === '30D' ? '30' : '90'));
+      if (activeBtn) activeBtn.className = "px-2.5 py-1 rounded bg-blue-600 text-white font-semibold transition";
+
+      if (range === '7D') {
+        document.getElementById('metric-reach').innerText = "64,280";
+        document.getElementById('metric-impressions').innerText = "152,400";
+        document.getElementById('metric-sessions').innerText = "11,840";
+        document.getElementById('metric-eng-rate').innerText = "7.14%";
+      } else if (range === '30D') {
+        document.getElementById('metric-reach').innerText = "284,520";
+        document.getElementById('metric-impressions').innerText = "694,180";
+        document.getElementById('metric-sessions').innerText = "48,910";
+        document.getElementById('metric-eng-rate').innerText = "6.84%";
+      } else {
+        document.getElementById('metric-reach').innerText = "891,400";
+        document.getElementById('metric-impressions').innerText = "2,140,800";
+        document.getElementById('metric-sessions').innerText = "142,600";
+        document.getElementById('metric-eng-rate').innerText = "6.42%";
+      }
+    }
+
+    // "Sync Now" Real-Time Interactive Simulator
+    function triggerSyncNow() {
+      const progressBar = document.getElementById('sync-progress-bar');
+      const stageText = document.getElementById('sync-stage-text');
+      const syncBtn = document.getElementById('btn-sync-now');
+      const syncText = document.getElementById('sync-text');
+      const syncIcon = document.getElementById('sync-icon');
+
+      syncBtn.disabled = true;
+      syncText.innerText = "Syncing...";
+      syncIcon.classList.add('animate-spin');
+      progressBar.classList.remove('hidden');
+
+      stageText.innerText = "1/4 Checking token status and refreshing OAuth credentials...";
+      setTimeout(() => {
+        stageText.innerText = "2/4 Calling Meta, Instagram, LinkedIn and GA4 APIs with rate throttling...";
+      }, 1200);
+
+      setTimeout(() => {
+        stageText.innerText = "3/4 Validating payloads and normalizing into unified daily_metrics schema...";
+      }, 2500);
+
+      setTimeout(() => {
+        stageText.innerText = "4/4 Storing records with idempotent upsert and logging sync audit trail...";
+      }, 3800);
+
+      setTimeout(() => {
+        progressBar.classList.add('hidden');
+        syncBtn.disabled = false;
+        syncText.innerText = "Sync Now";
+        syncIcon.classList.remove('animate-spin');
+        document.getElementById('last-sync-time').innerText = "Just now (Success)";
+        alert("Sync Completed Successfully! 1,420 historical metrics and 18 posts updated with zero errors.");
+      }, 4800);
+    }
+
+    // AI Natural Language Insights Sandbox
+    function runAiDemo(type) {
+      const s1 = document.getElementById('ai-step-1');
+      const s2 = document.getElementById('ai-step-2');
+      const s3 = document.getElementById('ai-step-3');
+
+      if (type === 'why-drop') {
+        s1.innerHTML = `get_channel_metrics({<br>&nbsp;&nbsp;platform: 'linkedin',<br>&nbsp;&nbsp;metric: 'impressions',<br>&nbsp;&nbsp;timeframe: '2026-03'<br>})`;
+        s2.innerHTML = `SELECT date_trunc('week', metric_date), sum(impressions), count(post_id)<br>FROM daily_metrics<br>WHERE org_id = 'acme'`;
+        s3.innerHTML = `"LinkedIn impressions dropped <strong>68% in Week 3 of March</strong>. This was caused by a reduction in post cadence (only 1 post published vs your typical 5 posts/week)."`;
+      } else if (type === 'best-channel') {
+        s1.innerHTML = `get_top_channel_by_metric({<br>&nbsp;&nbsp;metric: 'engagements',<br>&nbsp;&nbsp;timeframe: 'last_month'<br>})`;
+        s2.innerHTML = `SELECT platform, sum(engagements) as total_eng<br>FROM daily_metrics<br>GROUP BY platform ORDER BY total_eng DESC`;
+        s3.innerHTML = `"<strong>Instagram</strong> drove the highest total engagement last month with <strong>18,420 interactions</strong> (representing 46% of all social engagement across platforms)."`;
+      } else if (type === 'compare-q1') {
+        s1.innerHTML = `compare_metrics({<br>&nbsp;&nbsp;source_a: 'ga4.sessions',<br>&nbsp;&nbsp;source_b: 'instagram.profile_views'<br>})`;
+        s2.innerHTML = `SELECT date_trunc('month', metric_date), sum(ga4_sessions), sum((platform_raw->>'profile_views')::int)<br>FROM daily_metrics GROUP BY 1`;
+        s3.innerHTML = `"GA4 website sessions tracked closely with Instagram profile visits across Q1, with an <strong>82% positive correlation</strong> following major product announcements."`;
+      }
+    }
+  </script>
+</body>
+</html>

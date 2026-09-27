@@ -1,0 +1,980 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>3D System Architecture Blueprint — Multi-Tenant Marketing Intelligence SaaS</title>
+  <script src="https://www.gstatic.com/antigravity/web/dev/tailwindcss.min.js"></script>
+  <style>
+    :root {
+      --bg: #060913;
+      --grid-line: rgba(30, 41, 59, 0.4);
+      --tier-1: #3b82f6; /* External Sources */
+      --tier-2: #6366f1; /* Ingestion & Queue */
+      --tier-3: #10b981; /* Database & Storage */
+      --tier-4: #06b6d4; /* API & Security */
+      --tier-5: #a855f7; /* UI & AI */
+    }
+    body {
+      background-color: var(--bg);
+      color: #f8fafc;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+      user-select: none;
+    }
+
+    /* 3D Scene Viewport */
+    #viewport-container {
+      perspective: 1400px;
+      perspective-origin: 50% 45%;
+      width: 100vw;
+      height: 100vh;
+      overflow: hidden;
+      position: absolute;
+      top: 0;
+      left: 0;
+      cursor: grab;
+    }
+    #viewport-container:active {
+      cursor: grabbing;
+    }
+
+    #world-3d {
+      width: 100%;
+      height: 100%;
+      position: absolute;
+      transform-style: preserve-3d;
+      transform-origin: 50% 50% 0px;
+      transition: transform 0.05s ease-out;
+    }
+
+    /* Architectural Tier Planes */
+    .tier-plane {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin-left: -480px;
+      margin-top: -260px;
+      width: 960px;
+      height: 520px;
+      transform-style: preserve-3d;
+      border-radius: 20px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(4px);
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.6);
+      transition: transform 0.6s cubic-bezier(0.2, 0.8, 0.2, 1), opacity 0.4s ease;
+    }
+
+    .tier-label {
+      position: absolute;
+      left: 20px;
+      top: -16px;
+      padding: 4px 14px;
+      border-radius: 9999px;
+      font-size: 11px;
+      font-weight: 800;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.5);
+    }
+
+    /* Architectural 3D Nodes */
+    .arch-node {
+      position: absolute;
+      border-radius: 14px;
+      padding: 14px 16px;
+      background: rgba(15, 23, 42, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.6);
+      cursor: pointer;
+      transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+      transform-style: preserve-3d;
+      transform: translateZ(20px);
+    }
+    .arch-node:hover {
+      transform: translateZ(38px) scale(1.04);
+      border-color: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 20px 35px -5px rgba(0, 0, 0, 0.8), 0 0 25px currentColor;
+    }
+    .arch-node.active-node {
+      transform: translateZ(45px) scale(1.06);
+      border-color: #38bdf8 !important;
+      box-shadow: 0 0 35px #0284c7, 0 25px 40px rgba(0,0,0,0.9);
+    }
+
+    /* 3D Grid Floor */
+    #grid-floor {
+      position: absolute;
+      left: 50%;
+      top: 50%;
+      margin-left: -900px;
+      margin-top: -900px;
+      width: 1800px;
+      height: 1800px;
+      background-size: 60px 60px;
+      background-image: 
+        linear-gradient(to right, rgba(51, 65, 85, 0.15) 1px, transparent 1px),
+        linear-gradient(to bottom, rgba(51, 65, 85, 0.15) 1px, transparent 1px);
+      transform: translateZ(-420px);
+      border-radius: 50%;
+      pointer-events: none;
+    }
+
+    /* Particle Canvas overlay */
+    #particle-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 5;
+    }
+
+    /* Glassmorphic UI HUD */
+    .glass-hud {
+      background: rgba(10, 15, 30, 0.85);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      backdrop-filter: blur(16px);
+      box-shadow: 0 20px 50px rgba(0, 0, 0, 0.7);
+    }
+
+    /* Custom Scrollbar for HUD */
+    .hud-scroll::-webkit-scrollbar {
+      width: 4px;
+    }
+    .hud-scroll::-webkit-scrollbar-thumb {
+      background: #334155;
+      border-radius: 2px;
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Particle & Stream Lines Overlay -->
+  <canvas id="particle-canvas"></canvas>
+
+  <!-- 3D Viewport Scene -->
+  <div id="viewport-container">
+    <div id="world-3d">
+      
+      <!-- Virtual Infinite Floor Grid -->
+      <div id="grid-floor"></div>
+
+      <!-- ============================================================== -->
+      <!-- TIER 5 (TOP): CLIENT & CONSUMPTION LAYER (Z: +260px)          -->
+      <!-- ============================================================== -->
+      <div id="tier-5" class="tier-plane" style="transform: translateZ(260px); background: rgba(168, 85, 247, 0.05); border-color: rgba(168, 85, 247, 0.35);">
+        <span class="tier-label bg-purple-900/80 text-purple-300 border border-purple-500/40">Tier 5 • Client Presentation & AI Consumption Layer</span>
+
+        <!-- Node 5A: Next.js Unified Dashboard -->
+        <div onclick="inspectNode('node-dashboard')" id="node-dashboard" class="arch-node text-purple-400" style="left: 40px; top: 70px; width: 270px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-purple-300">
+            <span>Next.js 14+ Dashboard</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200">SSR / Client</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Executive & Channel UI</div>
+          <p class="text-[11px] text-slate-300 mt-1">Sub-200ms cached views, Tremor & Recharts visualization, SWR revalidation.</p>
+        </div>
+
+        <!-- Node 5B: Multi-Persona & Agency Switcher -->
+        <div onclick="inspectNode('node-personas')" id="node-personas" class="arch-node text-pink-400" style="left: 345px; top: 70px; width: 270px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-pink-300">
+            <span>Persona Workspaces</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-pink-500/20 text-pink-200">Multi-Role</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">CMO, Manager & Agency Switcher</div>
+          <p class="text-[11px] text-slate-300 mt-1">1-click client tenant switching, blended cross-channel KPIs, post-level drilldowns.</p>
+        </div>
+
+        <!-- Node 5C: Grounded Natural-Language AI Insights -->
+        <div onclick="inspectNode('node-ai')" id="node-ai" class="arch-node text-cyan-400" style="left: 650px; top: 70px; width: 270px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-cyan-300">
+            <span>Model Context Protocol (MCP)</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-200">AI Agent</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Grounded NL Insights Engine</div>
+          <p class="text-[11px] text-slate-300 mt-1">Semantic tool calling, anomaly factor breakdown, zero hallucination math.</p>
+        </div>
+
+        <!-- Node 5D: On-Demand "Sync Now" SSE Receiver -->
+        <div onclick="inspectNode('node-sync-ui')" id="node-sync-ui" class="arch-node text-emerald-400" style="left: 200px; top: 290px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-emerald-300">
+            <span>Live Sync Feedback</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200">SSE / Stream</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">"Sync Now" Real-Time UI</div>
+          <p class="text-[11px] text-slate-300 mt-1">Instant pipeline progress indicator, status toasts & zero cryptic error leaks.</p>
+        </div>
+
+        <!-- Node 5E: Proactive Reconnect UX -->
+        <div onclick="inspectNode('node-reconnect-ui')" id="node-reconnect-ui" class="arch-node text-amber-400" style="left: 500px; top: 290px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-amber-300">
+            <span>Token State Handler</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200">UX Guard</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Graceful Reconnect Alerts</div>
+          <p class="text-[11px] text-slate-300 mt-1">Interprets revoked OAuth tokens into friendly 1-click re-authorization cards.</p>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- TIER 4: APPLICATION & SECURITY GATEWAY LAYER (Z: +130px)       -->
+      <!-- ============================================================== -->
+      <div id="tier-4" class="tier-plane" style="transform: translateZ(130px); background: rgba(6, 182, 212, 0.05); border-color: rgba(6, 182, 212, 0.35);">
+        <span class="tier-label bg-cyan-900/80 text-cyan-300 border border-cyan-500/40">Tier 4 • Application & Security Gateway Layer</span>
+
+        <!-- Node 4A: Fastify API Gateway -->
+        <div onclick="inspectNode('node-api-gateway')" id="node-api-gateway" class="arch-node text-cyan-400" style="left: 60px; top: 120px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-cyan-300">
+            <span>Fastify Node.js Gateway</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-200">REST API</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">High-Throughput API Gateway</div>
+          <p class="text-[11px] text-slate-300 mt-1">Stateless request routing, OpenTelemetry tracing, schema serialization.</p>
+        </div>
+
+        <!-- Node 4B: RBAC & Tenant Context Injector -->
+        <div onclick="inspectNode('node-tenant-context')" id="node-tenant-context" class="arch-node text-blue-400" style="left: 350px; top: 120px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-blue-300">
+            <span>RBAC & Context Guard</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-200">Security</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Tenant Session Context</div>
+          <p class="text-[11px] text-slate-300 mt-1">Injects <code class="text-blue-200">SET LOCAL app.current_org_id</code> per transaction. Enforces Admin/Mgr/Viewer roles.</p>
+        </div>
+
+        <!-- Node 4C: Redis Cache & Concurrency Lock -->
+        <div onclick="inspectNode('node-redis-cache')" id="node-redis-cache" class="arch-node text-rose-400" style="left: 640px; top: 120px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-rose-300">
+            <span>Redis ElastiCache</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-200">In-Memory</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Aggregate Caching & Locks</div>
+          <p class="text-[11px] text-slate-300 mt-1">Sub-millisecond KPI cache + atomic distributed locks preventing overlapping syncs.</p>
+        </div>
+
+        <!-- Node 4D: Observability & Sentry Logs -->
+        <div onclick="inspectNode('node-observability')" id="node-observability" class="arch-node text-slate-300" style="left: 350px; top: 310px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-slate-400">
+            <span>Observability Engine</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-slate-500/20 text-slate-200">Telemetry</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Datadog & Sentry Audit</div>
+          <p class="text-[11px] text-slate-400 mt-1">Structured JSON logging with tenant correlation IDs and failure alarms.</p>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- TIER 3: CORE PERSISTENCE & MULTI-TENANT STORAGE (Z: 0px)       -->
+      <!-- ============================================================== -->
+      <div id="tier-3" class="tier-plane" style="transform: translateZ(0px); background: rgba(16, 185, 129, 0.05); border-color: rgba(16, 185, 129, 0.45); box-shadow: 0 0 60px rgba(16, 185, 129, 0.15);">
+        <span class="tier-label bg-emerald-950 text-emerald-300 border border-emerald-500/50">Tier 3 • Multi-Tenant Persistence & Storage Plane (Hardware RLS)</span>
+
+        <!-- Node 3A: PostgreSQL 16 Cluster + Kernel RLS -->
+        <div onclick="inspectNode('node-postgres-rls')" id="node-postgres-rls" class="arch-node text-emerald-400" style="left: 40px; top: 90px; width: 280px; border-width: 2px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-emerald-300">
+            <span>PostgreSQL 16 Cluster</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200">Hardware RLS</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Kernel Row-Level Security</div>
+          <p class="text-[11px] text-slate-300 mt-1">Non-bypassable multi-tenancy. Zero data leakage even with unconstrained SQL queries.</p>
+        </div>
+
+        <!-- Node 3B: Partitioned daily_metrics -->
+        <div onclick="inspectNode('node-daily-metrics')" id="node-daily-metrics" class="arch-node text-emerald-300" style="left: 350px; top: 90px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-emerald-400">
+            <span>daily_metrics (Partitions)</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-emerald-500/20 text-emerald-200">Time-Series</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Quarterly Date Partitioning</div>
+          <p class="text-[11px] text-slate-300 mt-1">Normalized impressions, reach, engagement & GA4 metrics. Composite indexes on (org_id, date).</p>
+        </div>
+
+        <!-- Node 3C: content_posts & sync_logs -->
+        <div onclick="inspectNode('node-content-posts')" id="node-content-posts" class="arch-node text-teal-300" style="left: 640px; top: 90px; width: 270px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-teal-400">
+            <span>content_posts & sync_logs</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-teal-500/20 text-teal-200">Audit & Content</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Post Performance & Logs</div>
+          <p class="text-[11px] text-slate-300 mt-1">Stores post-level interactions, permalinks, media assets, and immutable sync audit runs.</p>
+        </div>
+
+        <!-- Node 3D: KMS Envelope Encryption Engine -->
+        <div onclick="inspectNode('node-kms-encryption')" id="node-kms-encryption" class="arch-node text-amber-400" style="left: 180px; top: 310px; width: 280px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-amber-300">
+            <span>AWS / GCP KMS</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-amber-500/20 text-amber-200">Envelope Crypto</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">AES-256-GCM Token Encryption</div>
+          <p class="text-[11px] text-slate-300 mt-1">Tokens encrypted at rest. Hardware master keys, zero plaintext credentials in database.</p>
+        </div>
+
+        <!-- Node 3E: WAL Archival & PITR -->
+        <div onclick="inspectNode('node-pitr-backups')" id="node-pitr-backups" class="arch-node text-indigo-400" style="left: 500px; top: 310px; width: 280px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-indigo-300">
+            <span>Disaster Recovery</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-200">PITR 30 Days</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Continuous S3 WAL Archival</div>
+          <p class="text-[11px] text-slate-300 mt-1">Point-In-Time Recovery down to the minute. RPO &lt; 5 min, RTO &lt; 30 min.</p>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- TIER 2: INGESTION, ETL & QUEUEING ENGINE (Z: -130px)           -->
+      <!-- ============================================================== -->
+      <div id="tier-2" class="tier-plane" style="transform: translateZ(-130px); background: rgba(99, 102, 241, 0.05); border-color: rgba(99, 102, 241, 0.35);">
+        <span class="tier-label bg-indigo-950 text-indigo-300 border border-indigo-500/40">Tier 2 • Decoupled Ingestion & ETL Engine</span>
+
+        <!-- Node 2A: BullMQ Scheduler & Workers -->
+        <div onclick="inspectNode('node-bullmq-scheduler')" id="node-bullmq-scheduler" class="arch-node text-indigo-400" style="left: 50px; top: 110px; width: 270px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-indigo-300">
+            <span>BullMQ Job Cluster</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-indigo-500/20 text-indigo-200">Distributed</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Centralized Scheduler (1-24h)</div>
+          <p class="text-[11px] text-slate-300 mt-1">Default 6-hour cron, handles concurrency queues and on-demand "Sync Now" requests.</p>
+        </div>
+
+        <!-- Node 2B: Zod Schema Normalizer -->
+        <div onclick="inspectNode('node-zod-normalizer')" id="node-zod-normalizer" class="arch-node text-cyan-400" style="left: 350px; top: 110px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-cyan-300">
+            <span>Schema Normalizer</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-cyan-500/20 text-cyan-200">Zod Runtime</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Universal Metric Mapper</div>
+          <p class="text-[11px] text-slate-300 mt-1">Translates conflicting vendor metrics into standard columns. Schema drift routed to JSONB.</p>
+        </div>
+
+        <!-- Node 2C: Proactive Token Auto-Refresher -->
+        <div onclick="inspectNode('node-token-refresher')" id="node-token-refresher" class="arch-node text-purple-400" style="left: 640px; top: 110px; width: 270px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-purple-300">
+            <span>Token Lifecycle Manager</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-purple-500/20 text-purple-200">Automated</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Proactive 72h Auto-Refresh</div>
+          <p class="text-[11px] text-slate-300 mt-1">Audits token TTL hourly. Refreshes OAuth tokens silently 3 days before expiration.</p>
+        </div>
+
+        <!-- Node 2D: Dead-Letter Queue & Circuit Breakers -->
+        <div onclick="inspectNode('node-dlq-retries')" id="node-dlq-retries" class="arch-node text-rose-400" style="left: 350px; top: 310px; width: 260px;">
+          <div class="flex items-center justify-between text-xs font-bold uppercase tracking-wider text-rose-300">
+            <span>Resilience Subsystem</span>
+            <span class="text-[10px] px-1.5 py-0.5 rounded bg-rose-500/20 text-rose-200">DLQ / Retry</span>
+          </div>
+          <div class="text-sm font-semibold text-white mt-1.5">Exponential Backoff & Jitter</div>
+          <p class="text-[11px] text-slate-300 mt-1">Prevents thundering herds during vendor outages. Max 5 retries with dead-letter triage.</p>
+        </div>
+      </div>
+
+      <!-- ============================================================== -->
+      <!-- TIER 1 (BOTTOM): EXTERNAL MARKETING PLATFORMS (Z: -260px)      -->
+      <!-- ============================================================== -->
+      <div id="tier-1" class="tier-plane" style="transform: translateZ(-260px); background: rgba(59, 130, 246, 0.05); border-color: rgba(59, 130, 246, 0.35);">
+        <span class="tier-label bg-blue-950 text-blue-300 border border-blue-500/40">Tier 1 • External Marketing Platforms (Phase 1 Integrations)</span>
+
+        <!-- Node 1A: Meta / Facebook Graph API -->
+        <div onclick="inspectNode('node-meta-api')" id="node-meta-api" class="arch-node text-blue-400" style="left: 40px; top: 180px; width: 200px;">
+          <div class="flex items-center justify-between text-xs font-bold text-blue-300">
+            <span>Meta / Facebook</span>
+            <span class="text-[9px] px-1 rounded bg-blue-500/20">Graph v19</span>
+          </div>
+          <div class="text-xs font-semibold text-white mt-1">Page Insights & Posts</div>
+          <p class="text-[10px] text-slate-400 mt-1">Followers, reach, impressions, post-level engagement.</p>
+        </div>
+
+        <!-- Node 1B: Instagram Graph API -->
+        <div onclick="inspectNode('node-ig-api')" id="node-ig-api" class="arch-node text-pink-400" style="left: 270px; top: 180px; width: 200px;">
+          <div class="flex items-center justify-between text-xs font-bold text-pink-300">
+            <span>Instagram API</span>
+            <span class="text-[9px] px-1 rounded bg-pink-500/20">Business</span>
+          </div>
+          <div class="text-xs font-semibold text-white mt-1">Insights & Media</div>
+          <p class="text-[10px] text-slate-400 mt-1">Reach, impressions, profile visits, media metrics.</p>
+        </div>
+
+        <!-- Node 1C: LinkedIn API -->
+        <div onclick="inspectNode('node-linkedin-api')" id="node-linkedin-api" class="arch-node text-sky-400" style="left: 500px; top: 180px; width: 200px;">
+          <div class="flex items-center justify-between text-xs font-bold text-sky-300">
+            <span>LinkedIn API</span>
+            <span class="text-[9px] px-1 rounded bg-sky-500/20">Community</span>
+          </div>
+          <div class="text-xs font-semibold text-white mt-1">Organization Stats</div>
+          <p class="text-[10px] text-slate-400 mt-1">Followers, impressions, clicks, reactions, shares.</p>
+        </div>
+
+        <!-- Node 1D: GA4 Data API -->
+        <div onclick="inspectNode('node-ga4-api')" id="node-ga4-api" class="arch-node text-amber-400" style="left: 730px; top: 180px; width: 200px;">
+          <div class="flex items-center justify-between text-xs font-bold text-amber-300">
+            <span>Google Analytics 4</span>
+            <span class="text-[9px] px-1 rounded bg-amber-500/20">Data API v1b</span>
+          </div>
+          <div class="text-xs font-semibold text-white mt-1">Traffic & Sessions</div>
+          <p class="text-[10px] text-slate-400 mt-1">Users, sessions, engagement rate, landing pages.</p>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- FLOATING 2D CONTROL OVERLAY (TOP HUD)                           -->
+  <!-- ============================================================== -->
+  <div class="absolute top-5 left-5 z-20 flex flex-col gap-3">
+    <!-- Title & Brand -->
+    <div class="glass-hud px-4 py-3 rounded-xl max-w-sm">
+      <div class="flex items-center gap-2.5">
+        <div class="h-7 w-7 rounded-lg bg-gradient-to-tr from-blue-600 via-indigo-500 to-purple-500 flex items-center justify-center font-bold text-white text-xs shadow-md">
+          3D
+        </div>
+        <div>
+          <h1 class="text-xs font-bold text-white tracking-tight">System Architecture 3D Model</h1>
+          <p class="text-[10px] text-slate-400">Decoupled Multi-Tenant Ingestion & Persistence Engine</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3D Camera Controls & View Presets -->
+    <div class="glass-hud p-2.5 rounded-xl flex flex-wrap items-center gap-1.5 max-w-md text-xs font-medium">
+      <button onclick="setViewPreset('iso')" id="btn-view-iso" class="px-2.5 py-1.5 rounded-lg bg-blue-600 text-white font-semibold shadow-md transition">
+        Isometric 3D
+      </button>
+      <button onclick="setViewPreset('exploded')" id="btn-view-exploded" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+        Exploded Tiers
+      </button>
+      <button onclick="setViewPreset('security')" id="btn-view-security" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+        Security & RLS Focus
+      </button>
+      <button onclick="setViewPreset('top')" id="btn-view-top" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition">
+        Top-Down View
+      </button>
+      <button onclick="toggleAutoRotate()" id="btn-auto-rotate" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition flex items-center gap-1">
+        <span id="rotate-dot" class="w-2 h-2 rounded-full bg-slate-500"></span>
+        Auto-Orbit
+      </button>
+    </div>
+
+    <!-- Mouse Orbit Instruction Tip -->
+    <div class="text-[10px] text-slate-400 font-mono flex items-center gap-1.5 px-1">
+      <span class="inline-block w-1.5 h-1.5 rounded-full bg-cyan-400 animate-ping"></span>
+      Click & drag in space to orbit | Scroll wheel to zoom
+    </div>
+  </div>
+
+  <!-- Back to Proposal Link -->
+  <div class="absolute top-5 right-5 z-20 flex items-center gap-3">
+    <a href="interactive_proposal_presentation.html" class="glass-hud px-4 py-2 rounded-xl text-xs font-semibold text-slate-200 hover:text-white hover:border-blue-500 transition flex items-center gap-1.5">
+      <svg class="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 19l-7-7m0 0l7-7m-7 7h18"></path></svg>
+      Return to Proposal & Roadmap
+    </a>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- FLOATING TECHNICAL INSPECTION HUD (RIGHT DRAWER)               -->
+  <!-- ============================================================== -->
+  <div id="inspector-hud" class="absolute right-5 bottom-5 top-20 w-80 lg:w-96 glass-hud rounded-2xl p-5 z-20 flex flex-col justify-between hidden hud-scroll overflow-y-auto">
+    <div class="space-y-4">
+      <!-- Header -->
+      <div class="flex items-center justify-between pb-3 border-b border-slate-800">
+        <div>
+          <span id="hud-tier-badge" class="text-[10px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 border border-blue-500/30">
+            Tier 3 Persistence
+          </span>
+          <h3 id="hud-title" class="text-base font-bold text-white mt-1.5">PostgreSQL 16 Cluster</h3>
+        </div>
+        <button onclick="closeInspector()" class="p-1 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800 transition">
+          <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path></svg>
+        </button>
+      </div>
+
+      <!-- Description -->
+      <p id="hud-desc" class="text-xs text-slate-300 leading-relaxed">
+        The core multi-tenant storage cluster. Kernel-enforced Row-Level Security (RLS) ensures that every transactional query is bounded to the authenticated tenant.
+      </p>
+
+      <!-- Key Engineering Specs -->
+      <div class="space-y-2.5 pt-1">
+        <span class="text-[10px] font-bold uppercase tracking-wider text-slate-400 block">Engineering Specifications</span>
+        
+        <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs">
+          <span class="text-slate-400 block text-[10px]">Technology / Framework</span>
+          <strong id="hud-tech" class="text-white font-mono">PostgreSQL 16 + RLS</strong>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs">
+          <span class="text-slate-400 block text-[10px]">Tenant Isolation Rule</span>
+          <strong id="hud-isolation" class="text-emerald-400 font-mono text-[11px]">Kernel-enforced via session variables</strong>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs">
+          <span class="text-slate-400 block text-[10px]">Performance / SLA</span>
+          <strong id="hud-sla" class="text-cyan-300 font-mono text-[11px]">&lt; 200ms P95 query response time</strong>
+        </div>
+
+        <div class="p-2.5 rounded-lg bg-slate-900/90 border border-slate-800 text-xs">
+          <span class="text-slate-400 block text-[10px]">Resilience & Failover</span>
+          <strong id="hud-failover" class="text-purple-300 font-mono text-[11px]">Multi-AZ hot standby + 30-day PITR</strong>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer Action -->
+    <div class="pt-4 border-t border-slate-800 text-center">
+      <span class="text-[10px] text-slate-500">Click any other node in 3D to inspect its architecture</span>
+    </div>
+  </div>
+
+  <!-- ============================================================== -->
+  <!-- JAVASCRIPT: 3D CAMERA ORBIT, PARTICLE ENGINE & INTERACTIVITY   -->
+  <!-- ============================================================== -->
+  <script>
+    // 3D Scene State
+    let rotX = 58;  // Pitch angle (degrees)
+    let rotY = 0;   // Yaw angle (degrees)
+    let rotZ = 35;  // Roll / Iso angle (degrees)
+    let zoom = 1.0;
+    let isDragging = false;
+    let startX, startY;
+    let autoRotate = false;
+    let autoRotateSpeed = 0.15;
+    let currentPreset = 'iso';
+
+    const world = document.getElementById('world-3d');
+    const viewport = document.getElementById('viewport-container');
+
+    function updateWorldTransform() {
+      world.style.transform = `scale(${zoom}) rotateX(${rotX}deg) rotateZ(${rotZ}deg) rotateY(${rotY}deg)`;
+    }
+    updateWorldTransform();
+
+    // Mouse Drag Rotation
+    viewport.addEventListener('mousedown', (e) => {
+      if (e.target.closest('#inspector-hud') || e.target.closest('.glass-hud')) return;
+      isDragging = true;
+      startX = e.clientX;
+      startY = e.clientY;
+    });
+
+    window.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const dx = e.clientX - startX;
+      const dy = e.clientY - startY;
+
+      rotZ -= dx * 0.35;
+      rotX += dy * 0.35;
+
+      // Constrain Pitch to prevent flipping
+      rotX = Math.max(15, Math.min(85, rotX));
+
+      startX = e.clientX;
+      startY = e.clientY;
+      updateWorldTransform();
+    });
+
+    window.addEventListener('mouseup', () => {
+      isDragging = false;
+    });
+
+    // Zoom Wheel
+    viewport.addEventListener('wheel', (e) => {
+      e.preventDefault();
+      zoom += e.deltaY * -0.001;
+      zoom = Math.max(0.65, Math.min(1.8, zoom));
+      updateWorldTransform();
+    }, { passive: false });
+
+    // Touch Support for Mobile / iPad
+    let touchStartX, touchStartY;
+    viewport.addEventListener('touchstart', (e) => {
+      if (e.touches.length === 1) {
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+      }
+    });
+    viewport.addEventListener('touchmove', (e) => {
+      if (e.touches.length === 1) {
+        const dx = e.touches[0].clientX - touchStartX;
+        const dy = e.touches[0].clientY - touchStartY;
+        rotZ -= dx * 0.4;
+        rotX += dy * 0.4;
+        rotX = Math.max(15, Math.min(85, rotX));
+        touchStartX = e.touches[0].clientX;
+        touchStartY = e.touches[0].clientY;
+        updateWorldTransform();
+      }
+    });
+
+    // Auto-Orbit Loop
+    function animate() {
+      if (autoRotate && !isDragging) {
+        rotZ += autoRotateSpeed;
+        updateWorldTransform();
+      }
+      requestAnimationFrame(animate);
+    }
+    animate();
+
+    function toggleAutoRotate() {
+      autoRotate = !autoRotate;
+      const btn = document.getElementById('btn-auto-rotate');
+      const dot = document.getElementById('rotate-dot');
+      if (autoRotate) {
+        btn.classList.add('bg-blue-600', 'text-white');
+        btn.classList.remove('bg-slate-800', 'text-slate-300');
+        dot.classList.add('bg-emerald-400');
+        dot.classList.remove('bg-slate-500');
+      } else {
+        btn.classList.remove('bg-blue-600', 'text-white');
+        btn.classList.add('bg-slate-800', 'text-slate-300');
+        dot.classList.remove('bg-emerald-400');
+        dot.classList.add('bg-slate-500');
+      }
+    }
+
+    // Camera View Presets
+    function setViewPreset(preset) {
+      currentPreset = preset;
+      ['iso', 'exploded', 'security', 'top'].forEach(p => {
+        const btn = document.getElementById('btn-view-' + p);
+        if (btn) {
+          btn.className = "px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 transition text-xs font-medium";
+        }
+      });
+      const activeBtn = document.getElementById('btn-view-' + preset);
+      if (activeBtn) {
+        activeBtn.className = "px-2.5 py-1.5 rounded-lg bg-blue-600 text-white font-semibold shadow-md transition text-xs";
+      }
+
+      const t1 = document.getElementById('tier-1');
+      const t2 = document.getElementById('tier-2');
+      const t3 = document.getElementById('tier-3');
+      const t4 = document.getElementById('tier-4');
+      const t5 = document.getElementById('tier-5');
+
+      if (preset === 'iso') {
+        rotX = 58; rotY = 0; rotZ = 35; zoom = 1.0;
+        t5.style.transform = "translateZ(260px)";
+        t4.style.transform = "translateZ(130px)";
+        t3.style.transform = "translateZ(0px)";
+        t2.style.transform = "translateZ(-130px)";
+        t1.style.transform = "translateZ(-260px)";
+        [t1, t2, t3, t4, t5].forEach(t => t.style.opacity = "1");
+      } else if (preset === 'exploded') {
+        rotX = 64; rotY = 0; rotZ = 28; zoom = 0.85;
+        // 2x vertical expansion
+        t5.style.transform = "translateZ(440px)";
+        t4.style.transform = "translateZ(220px)";
+        t3.style.transform = "translateZ(0px)";
+        t2.style.transform = "translateZ(-220px)";
+        t1.style.transform = "translateZ(-440px)";
+        [t1, t2, t3, t4, t5].forEach(t => t.style.opacity = "1");
+      } else if (preset === 'security') {
+        rotX = 50; rotY = 0; rotZ = 15; zoom = 1.15;
+        t5.style.transform = "translateZ(280px)";
+        t4.style.transform = "translateZ(140px)";
+        t3.style.transform = "translateZ(0px)";
+        t2.style.transform = "translateZ(-140px)";
+        t1.style.transform = "translateZ(-280px)";
+        t3.style.opacity = "1";
+        t4.style.opacity = "0.9";
+        t1.style.opacity = "0.2";
+        t2.style.opacity = "0.3";
+        t5.style.opacity = "0.3";
+        inspectNode('node-postgres-rls');
+      } else if (preset === 'top') {
+        rotX = 18; rotY = 0; rotZ = 0; zoom = 0.9;
+        t5.style.transform = "translateZ(260px)";
+        t4.style.transform = "translateZ(130px)";
+        t3.style.transform = "translateZ(0px)";
+        t2.style.transform = "translateZ(-130px)";
+        t1.style.transform = "translateZ(-260px)";
+        [t1, t2, t3, t4, t5].forEach(t => t.style.opacity = "1");
+      }
+      updateWorldTransform();
+    }
+
+    // Node Technical Specifications Database
+    const nodeSpecs = {
+      'node-dashboard': {
+        tier: 'Tier 5 • Presentation Layer',
+        title: 'Next.js 14+ Unified Dashboard',
+        desc: 'Server-rendered core application reading exclusively from indexed PostgreSQL daily_metrics. Completely decoupled from external APIs; page loads take < 200ms with zero vendor rate-limit risk.',
+        tech: 'Next.js 14 (App Router), Tailwind CSS, shadcn/ui, Recharts',
+        isolation: 'Client session claims (JWT) verify organization_id before query execution',
+        sla: '< 200ms page load; 99.9% availability',
+        failover: 'Static shell fallback with cached historical data'
+      },
+      'node-personas': {
+        tier: 'Tier 5 • Presentation Layer',
+        title: 'Persona-Driven Dashboard Views',
+        desc: 'Dedicated views for all 4 brief personas: CMO (macro ROI & cross-channel attribution), Marketing Manager (channel drilldowns & post engagement), Founder (clean leads & traffic), and Digital Agencies (multi-client account picker).',
+        tech: 'React 19 Server Components, Radix UI Primitives',
+        isolation: 'Account-level boundary checks restrict agency users to authorized clients',
+        sla: '1-click instant workspace switching (< 100ms)',
+        failover: 'Graceful empty-state guides for unconnected channels'
+      },
+      'node-ai': {
+        tier: 'Tier 5 • Presentation Layer',
+        title: 'Natural-Language Insights (MCP)',
+        desc: 'Model Context Protocol (MCP) agent parsing plain questions ("Why did impressions drop in March?"). Avoids naive text-to-SQL by mapping questions to deterministic analytical tools with hard-coded tenant scoping.',
+        tech: 'Model Context Protocol, Anthropic Claude 3.5 / OpenAI GPT-4o, Zod',
+        isolation: 'Organization ID injected server-side; LLM has zero direct SQL write access',
+        sla: '< 1.8s narrative generation grounded in verified DB aggregates',
+        failover: 'Semantic fallback to structured chart views if intent confidence < 80%'
+      },
+      'node-sync-ui': {
+        tier: 'Tier 5 • Presentation Layer',
+        title: '"Sync Now" Real-Time Feedback',
+        desc: 'Provides instant user feedback when triggering an on-demand sync. Connects via Server-Sent Events (SSE) to display multi-stage progress (Token Auth -> API Pull -> Normalization -> Storing).',
+        tech: 'Server-Sent Events (SSE), EventSource API',
+        isolation: 'Scoped strictly to active connected_account_id',
+        sla: 'Instant progress acknowledgment (< 50ms)',
+        failover: 'Auto-reconnect socket on network drop'
+      },
+      'node-reconnect-ui': {
+        tier: 'Tier 5 • Presentation Layer',
+        title: 'Graceful Reconnect UX Alerts',
+        desc: 'Intercepts expired or revoked OAuth tokens. Instead of showing cryptic JSON API errors or 500 crashes, displays clean, actionable "Reconnect Account" banners with single-click OAuth re-authorization.',
+        tech: 'Error State Boundary Middleware',
+        isolation: 'Only visible to Organization Admins',
+        sla: 'Immediate user alert upon token status change',
+        failover: 'Preserves all existing historical data while connection is paused'
+      },
+      'node-api-gateway': {
+        tier: 'Tier 4 • Gateway Layer',
+        title: 'Fastify Node.js API Gateway',
+        desc: 'High-throughput stateless backend orchestrating query execution, authentication middleware, and background worker queue dispatch.',
+        tech: 'Node.js (TypeScript), Fastify, Pino Logger',
+        isolation: 'Bearer JWT token validation on all inbound requests',
+        sla: 'P99 latency < 45ms for cached analytical endpoints',
+        failover: 'Multi-instance auto-scaling across availability zones'
+      },
+      'node-tenant-context': {
+        tier: 'Tier 4 • Security Layer',
+        title: 'Tenant Context Injector & RBAC',
+        desc: 'Extracts authenticated tenant ID from JWT and executes `SET LOCAL app.current_org_id` on the database connection. Enforces role privileges (Admin = all; Manager = view + sync; Viewer = read-only).',
+        tech: 'PostgreSQL Session Variables, JWT Claims',
+        isolation: 'Kernel-enforced session boundary; no cross-tenant query bypass',
+        sla: 'Zero execution overhead (< 0.2ms connection prep)',
+        failover: 'Automatic connection rollback on tenant mismatch'
+      },
+      'node-redis-cache': {
+        tier: 'Tier 4 • Gateway Layer',
+        title: 'Redis ElastiCache Cluster',
+        desc: 'Stores pre-computed daily rollups and provides distributed mutex locks (SET NX EX) to ensure that manual "Sync Now" jobs cannot trigger overlapping runs for the same connected account.',
+        tech: 'Redis 7, AWS ElastiCache / Upstash',
+        isolation: 'Key namespacing: `org:{id}:account:{id}:cache`',
+        sla: 'Sub-millisecond read latency (< 2ms)',
+        failover: 'Multi-AZ replication with automatic failover'
+      },
+      'node-observability': {
+        tier: 'Tier 4 • Gateway Layer',
+        title: 'Observability & Sentry Audit',
+        desc: 'End-to-end distributed tracing using OpenTelemetry. Captures execution durations, record counts, and failure traces with mandatory organization_id correlation tags.',
+        tech: 'OpenTelemetry, Datadog / Grafana Cloud, Sentry',
+        isolation: 'PII scrubbing and encrypted audit trails',
+        sla: 'Real-time alert dispatch within 60 seconds of anomaly',
+        failover: 'Local buffer fallback during monitoring service hiccups'
+      },
+      'node-postgres-rls': {
+        tier: 'Tier 3 • Persistence Layer',
+        title: 'PostgreSQL 16 Cluster with Kernel RLS',
+        desc: 'The architectural anchor of multi-tenancy. Row-Level Security policies are evaluated inside the PostgreSQL query planner. Even if application code issues `SELECT * FROM daily_metrics;`, only records matching current_setting(\'app.current_org_id\') are returned.',
+        tech: 'PostgreSQL 16 Enterprise, RDS Multi-AZ',
+        isolation: 'Hardware & database engine enforced RLS policies',
+        sla: 'Sub-50ms indexed queries across millions of rows',
+        failover: 'Hot standby replica with automatic DNS failover'
+      },
+      'node-daily-metrics': {
+        tier: 'Tier 3 • Persistence Layer',
+        title: 'Partitioned daily_metrics Table',
+        desc: 'Declarative quarterly range partitioning by metric_date. Stores normalized impressions, reach, engagements, and GA4 sessions. Composite index `(organization_id, account_id, metric_date DESC)` guarantees partition pruning.',
+        tech: 'PostgreSQL Range Partitioning, Composite B-Tree Indexes',
+        isolation: 'Inherits parent table Row-Level Security rules',
+        sla: 'Constant-time query latency independent of historical depth',
+        failover: 'Replicated across read replicas for dashboard traffic'
+      },
+      'node-content-posts': {
+        tier: 'Tier 3 • Persistence Layer',
+        title: 'content_posts & sync_logs',
+        desc: 'Houses post-level content, permalinks, media formats, and interaction counts alongside immutable execution logs recording duration, record counts, and error metadata.',
+        tech: 'JSONB overflow schemas for platform-specific metadata',
+        isolation: 'Tenant-scoped foreign keys to connected_accounts',
+        sla: '< 60ms retrieval for post grid views',
+        failover: 'Automated point-in-time recovery'
+      },
+      'node-kms-encryption': {
+        tier: 'Tier 3 • Persistence Layer',
+        title: 'AWS / GCP KMS Envelope Encryption',
+        desc: 'Platform OAuth access and refresh tokens are encrypted at rest using AES-256-GCM authenticated cipher. Master encryption key never leaves the hardware security module (HSM).',
+        tech: 'AWS KMS / GCP Cloud KMS, AES-256-GCM',
+        isolation: 'Dedicated encryption context per tenant organization',
+        sla: 'Zero plaintext token storage; FIPS 140-2 Level 3 compliance',
+        failover: 'Automatic KMS key rotation every 365 days'
+      },
+      'node-pitr-backups': {
+        tier: 'Tier 3 • Persistence Layer',
+        title: 'Continuous WAL Archival & PITR',
+        desc: 'Write-Ahead Logs (WAL) continuously streamed to geo-redundant Amazon S3 / Google Cloud Storage, allowing point-in-time recovery down to the exact second.',
+        tech: 'pgBackRest, S3 Glacier Instant Retrieval',
+        isolation: 'Encrypted storage buckets with strict IAM policies',
+        sla: 'RPO < 5 minutes | RTO < 30 minutes',
+        failover: 'Automated daily backup validation and test restores'
+      },
+      'node-bullmq-scheduler': {
+        tier: 'Tier 2 • Ingestion Engine',
+        title: 'BullMQ Distributed Job Scheduler',
+        desc: 'Coordinates background ingestion jobs across all accounts. Configurable cadence (1–24 hours, default 6 hours). Employs rate-limiting concurrency tokens to prevent platform throttling.',
+        tech: 'BullMQ, Redis, Node.js Worker Pool',
+        isolation: 'Jobs tagged with tenant organization_id and account_id',
+        sla: 'Guaranteed at-least-once job execution',
+        failover: 'Worker failure triggers automatic re-queueing to healthy pod'
+      },
+      'node-zod-normalizer': {
+        tier: 'Tier 2 • Ingestion Engine',
+        title: 'Schema Validator & Normalizer',
+        desc: 'Validates external API payloads at runtime using Zod. Maps disparate vendor metrics (Meta reach vs LinkedIn impressions) into a unified reporting taxonomy while dumping unexpected attributes into JSONB raw payloads.',
+        tech: 'Zod Runtime Type Validation, TypeScript',
+        isolation: 'Stateless in-memory transformation pipeline',
+        sla: 'Sub-millisecond parsing per record batch',
+        failover: 'Schema drift fallbacks keep pipeline running during API updates'
+      },
+      'node-token-refresher': {
+        tier: 'Tier 2 • Ingestion Engine',
+        title: 'Proactive Token Auto-Refresher',
+        desc: 'Hourly background cron inspects token expiration timestamps. Initiates silent OAuth token refreshes 72 hours before expiration, ensuring unbroken reporting continuity.',
+        tech: 'OAuth 2.0 Refresh Engine, KMS Decryption Client',
+        isolation: 'Processes tokens in isolated tenant transactions',
+        sla: '100% automated refresh success for offline-supported platforms',
+        failover: 'Sets status to ACTION_REQUIRED if refresh is revoked'
+      },
+      'node-dlq-retries': {
+        tier: 'Tier 2 • Ingestion Engine',
+        title: 'Dead-Letter Queue & Circuit Breaker',
+        desc: 'Handles transient network failures and 5xx vendor outages using exponential backoff with randomized jitter. Jobs failing 5 times are routed to DLQ for engineer alert.',
+        tech: 'BullMQ Dead Letter Queue, Circuit Breaker Pattern',
+        isolation: 'DLQ records maintain tenant trace IDs',
+        sla: 'Prevents quota exhaustion and API account bans',
+        failover: 'Automatic replay once vendor API health recovers'
+      },
+      'node-meta-api': {
+        tier: 'Tier 1 • External Platforms',
+        title: 'Meta / Facebook Graph API',
+        desc: 'Pulls Facebook Page Insights, page-level reach, impressions, post-level reactions, and follower trends. Tracks X-Page-Usage headers to stay strictly below 200 calls/hr.',
+        tech: 'Meta Graph API v19.0+',
+        isolation: 'OAuth User & Page Access Tokens bound per account',
+        sla: 'Synced every 6 hours (configurable 1-24h)',
+        failover: 'Leaky bucket throttling against rate-limit bursts'
+      },
+      'node-ig-api': {
+        tier: 'Tier 1 • External Platforms',
+        title: 'Instagram Graph API',
+        desc: 'Integrates Instagram Professional / Creator accounts to extract follower growth, total reach, impressions, profile visits, and media engagement (likes, comments, saves).',
+        tech: 'Instagram Graph API via Meta Container',
+        isolation: 'Restricted to authorized IG Business Account ID',
+        sla: 'Synced every 6 hours',
+        failover: 'Batch media insights queries'
+      },
+      'node-linkedin-api': {
+        tier: 'Tier 1 • External Platforms',
+        title: 'LinkedIn Community API',
+        desc: 'Collects organizational page statistics, historical followers, clicks, reactions, and post-level shares across LinkedIn company pages.',
+        tech: 'LinkedIn Marketing & Community Management API',
+        isolation: 'Scoped via OAuth 2.0 organization authorization',
+        sla: 'Synced every 6 hours; strict 24-hour quota management',
+        failover: 'Cached daily statistics avoid unnecessary query calls'
+      },
+      'node-ga4-api': {
+        tier: 'Tier 1 • External Platforms',
+        title: 'Google Analytics 4 Data API',
+        desc: 'Extracts web sessions, active users, engagement rates, traffic source channels, and device distributions from GA4 properties via the Data API v1beta.',
+        tech: 'Google Analytics 4 Data API v1beta',
+        isolation: 'Google Cloud Service Account / OAuth Property Scope',
+        sla: 'Batching up to 5 properties to conserve project token quotas',
+        failover: 'Batch request optimizer prevents quota lockouts'
+      }
+    };
+
+    function inspectNode(nodeId) {
+      document.querySelectorAll('.arch-node').forEach(el => el.classList.remove('active-node'));
+      const targetEl = document.getElementById(nodeId);
+      if (targetEl) targetEl.classList.add('active-node');
+
+      const data = nodeSpecs[nodeId];
+      if (data) {
+        document.getElementById('hud-tier-badge').innerText = data.tier;
+        document.getElementById('hud-title').innerText = data.title;
+        document.getElementById('hud-desc').innerText = data.desc;
+        document.getElementById('hud-tech').innerText = data.tech;
+        document.getElementById('hud-isolation').innerText = data.isolation;
+        document.getElementById('hud-sla').innerText = data.sla;
+        document.getElementById('hud-failover').innerText = data.failover;
+        document.getElementById('inspector-hud').classList.remove('hidden');
+      }
+    }
+
+    function closeInspector() {
+      document.getElementById('inspector-hud').classList.add('hidden');
+      document.querySelectorAll('.arch-node').forEach(el => el.classList.remove('active-node'));
+    }
+
+    // Canvas Background Particles & Atmospheric Flow
+    const canvas = document.getElementById('particle-canvas');
+    const ctx = canvas.getContext('2d');
+    let particles = [];
+
+    function resizeCanvas() {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    }
+    window.addEventListener('resize', resizeCanvas);
+    resizeCanvas();
+
+    class Particle {
+      constructor() {
+        this.reset();
+      }
+      reset() {
+        this.x = Math.random() * canvas.width;
+        this.y = canvas.height + Math.random() * 50;
+        this.size = Math.random() * 2 + 0.5;
+        this.speedY = Math.random() * 1.5 + 0.5;
+        this.speedX = (Math.random() - 0.5) * 0.4;
+        this.opacity = Math.random() * 0.6 + 0.2;
+        this.color = ['#38bdf8', '#a855f7', '#10b981', '#6366f1'][Math.floor(Math.random() * 4)];
+      }
+      update() {
+        this.y -= this.speedY;
+        this.x += this.speedX;
+        if (this.y < -10) this.reset();
+      }
+      draw() {
+        ctx.fillStyle = this.color;
+        ctx.globalAlpha = this.opacity;
+        ctx.beginPath();
+        ctx.arc(this.x, this.y, this.size, 0, Math.PI * 2);
+        ctx.fill();
+        ctx.globalAlpha = 1.0;
+      }
+    }
+
+    for (let i = 0; i < 45; i++) {
+      particles.push(new Particle());
+    }
+
+    function renderParticles() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      particles.forEach(p => {
+        p.update();
+        p.draw();
+      });
+      requestAnimationFrame(renderParticles);
+    }
+    renderParticles();
+  </script>
+</body>
+</html>

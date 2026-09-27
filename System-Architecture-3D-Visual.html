@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Marketing Intelligence Platform — Architecture Presentation</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+    <style>
+        *,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+        body{background:#020617;font-family:'Inter',-apple-system,system-ui,sans-serif;overflow:hidden;color:#f1f5f9;width:100vw;height:100vh}
+        #canvas-wrap{position:fixed;inset:0;z-index:0}
+        .vignette{position:fixed;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 35%,rgba(2,6,23,0.55)100%)}
+
+        /* ── START OVERLAY ── */
+        #startScreen{position:fixed;inset:0;z-index:500;background:rgba(2,6,23,0.97);display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .7s ease,visibility .7s ease}
+        #startScreen.gone{opacity:0;visibility:hidden;pointer-events:none}
+        .ss-logo{width:64px;height:64px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:18px;display:grid;place-items:center;font-weight:900;font-size:1.6rem;color:#fff;box-shadow:0 8px 40px rgba(59,130,246,0.35);margin-bottom:1.5rem;animation:pulse-glow 2s ease-in-out infinite}
+        @keyframes pulse-glow{0%,100%{box-shadow:0 8px 40px rgba(59,130,246,0.35)}50%{box-shadow:0 8px 60px rgba(59,130,246,0.55)}}
+        .ss-title{font-size:1.8rem;font-weight:800;background:linear-gradient(135deg,#fff 20%,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.35rem;letter-spacing:-.03em}
+        .ss-sub{font-size:.75rem;color:#475569;letter-spacing:.15em;text-transform:uppercase;margin-bottom:2.5rem}
+        .ss-play{background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(139,92,246,.15));border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:.75rem 2rem;border-radius:14px;font-size:.9rem;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:.6rem;transition:all .3s}
+        .ss-play:hover{background:linear-gradient(135deg,rgba(59,130,246,.3),rgba(139,92,246,.3));border-color:rgba(59,130,246,.7);box-shadow:0 0 30px rgba(59,130,246,.25);color:#dbeafe;transform:scale(1.04)}
+        .ss-play .tri{font-size:1.2rem}
+        .ss-hint{margin-top:1rem;font-size:.65rem;color:#334155}
+
+        /* ── CHAPTER TEXT OVERLAY ── */
+        #chOverlay{position:fixed;left:3rem;top:50%;transform:translateY(-50%);max-width:400px;z-index:60;transition:opacity .5s ease,transform .5s ease;pointer-events:none}
+        #chOverlay.hide{opacity:0;transform:translateY(-40%) translateX(-20px)}
+        .ch-badge{font-size:.6rem;font-weight:800;letter-spacing:.22em;text-transform:uppercase;color:#60a5fa;margin-bottom:.6rem;display:inline-block;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);padding:.2rem .7rem;border-radius:20px}
+        .ch-title{font-size:2.6rem;font-weight:900;line-height:1.05;margin-bottom:.4rem;letter-spacing:-.04em;background:linear-gradient(135deg,#fff 30%,#64748b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .ch-subtitle{font-size:.82rem;color:#475569;margin-bottom:1rem;font-weight:500}
+        .ch-desc{font-size:.8rem;color:#94a3b8;line-height:1.7;border-left:2px solid rgba(59,130,246,.25);padding-left:1rem}
+        .ch-stats{display:flex;gap:1.5rem;margin-top:1.2rem}
+        .ch-stat-val{font-size:1.3rem;font-weight:800;background:linear-gradient(135deg,#3b82f6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .ch-stat-lbl{font-size:.5rem;color:#475569;text-transform:uppercase;letter-spacing:.08em}
+
+        /* ── TIMELINE BAR ── */
+        #timeline{position:fixed;bottom:0;left:0;right:0;height:52px;background:rgba(2,6,23,.92);border-top:1px solid rgba(148,163,184,.06);display:flex;align-items:center;padding:0 1.5rem;z-index:100;backdrop-filter:blur(16px);gap:.75rem}
+        .tl-play{width:36px;height:36px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:50%;color:#93c5fd;font-size:.85rem;cursor:pointer;display:grid;place-items:center;transition:all .3s;font-family:inherit;flex-shrink:0}
+        .tl-play:hover{background:rgba(59,130,246,.25);box-shadow:0 0 15px rgba(59,130,246,.25)}
+        .tl-bar{flex:1;height:3px;background:rgba(148,163,184,.08);border-radius:2px;position:relative;cursor:pointer}
+        .tl-fill{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:2px;transition:width .3s linear}
+        .tl-dots{display:flex;gap:.4rem;flex-shrink:0}
+        .tl-dot{width:26px;height:26px;border-radius:50%;border:1.5px solid rgba(148,163,184,.12);background:transparent;color:#475569;font-size:.5rem;font-weight:700;cursor:pointer;display:grid;place-items:center;font-family:inherit;transition:all .3s}
+        .tl-dot.now{border-color:#3b82f6;color:#60a5fa;box-shadow:0 0 10px rgba(59,130,246,.2)}
+        .tl-dot.done{border-color:#10b981;color:#10b981}
+        .tl-time{font-size:.65rem;color:#334155;font-variant-numeric:tabular-nums;flex-shrink:0;min-width:45px;text-align:right}
+
+        /* ── HEADER ── */
+        .hdr{position:fixed;top:0;right:0;z-index:100;padding:.8rem 1.2rem;display:flex;gap:.35rem;pointer-events:none}
+        .hdr>*{pointer-events:auto}
+        .hdr-btn{background:rgba(15,23,42,.7);backdrop-filter:blur(10px);border:1px solid rgba(148,163,184,.08);color:#64748b;padding:.35rem .7rem;border-radius:7px;font-size:.65rem;font-family:inherit;cursor:pointer;transition:all .25s;font-weight:500}
+        .hdr-btn:hover{background:rgba(30,41,59,.8);color:#e2e8f0;border-color:rgba(148,163,184,.15)}
+
+        /* ── LEGEND ── */
+        .legend{position:fixed;top:1rem;left:1rem;z-index:60;pointer-events:none}
+        .legend-brand{display:flex;align-items:center;gap:.6rem;margin-bottom:.15rem}
+        .legend-icon{width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:9px;display:grid;place-items:center;font-weight:800;font-size:.7rem;color:#fff;box-shadow:0 3px 12px rgba(59,130,246,.25)}
+        .legend-brand h2{font-size:.85rem;font-weight:700;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;letter-spacing:-.02em}
+        .legend-brand p{font-size:.5rem;color:#334155;letter-spacing:.1em;text-transform:uppercase}
+
+        /* ── 3D LABELS ── */
+        .nd-label{background:rgba(15,23,42,.88);border:1px solid rgba(148,163,184,.08);border-left:3px solid var(--c,#3b82f6);border-radius:6px;padding:3px 9px;white-space:nowrap;pointer-events:none;transition:opacity .5s ease}
+        .nd-name{font-size:10px;font-weight:600;color:#e2e8f0;line-height:1.35}
+        .nd-sub{font-size:8px;color:#64748b;line-height:1.3}
+        .ly-label{font-size:9px;font-weight:700;letter-spacing:.16em;opacity:.3;white-space:nowrap;pointer-events:none;transition:opacity .5s ease}
+    </style>
+</head>
+<body>
+
+<!-- START SCREEN -->
+<div id="startScreen">
+    <div class="ss-logo">MI</div>
+    <div class="ss-title">Marketing Intelligence Platform</div>
+    <div class="ss-sub">Multi-Tenant SaaS · Architecture Presentation</div>
+    <button class="ss-play" onclick="window._start()"><span class="tri">▶</span> Play Architecture Presentation</button>
+    <div class="ss-hint">40-second cinematic tour · Interactive controls after playback</div>
+</div>
+
+<!-- CANVAS -->
+<div id="canvas-wrap"></div>
+<div class="vignette"></div>
+
+<!-- CHAPTER TEXT -->
+<div id="chOverlay" class="hide">
+    <div class="ch-badge" id="chBadge"></div>
+    <div class="ch-title" id="chTitle"></div>
+    <div class="ch-subtitle" id="chSub"></div>
+    <div class="ch-desc" id="chDesc"></div>
+    <div class="ch-stats" id="chStats"></div>
+</div>
+
+<!-- HEADER -->
+<div class="hdr">
+    <button class="hdr-btn" onclick="window._replay()">↺ Replay</button>
+    <button class="hdr-btn" onclick="window._resetCam()">Reset View</button>
+</div>
+
+<!-- BRAND -->
+<div class="legend">
+    <div class="legend-brand">
+        <div class="legend-icon">MI</div>
+        <div><h2>Marketing Intelligence</h2><p>Architecture Blueprint</p></div>
+    </div>
+</div>
+
+<!-- TIMELINE -->
+<div id="timeline">
+    <button class="tl-play" id="tlPlay" onclick="window._togglePlay()">▶</button>
+    <div class="tl-bar" id="tlBar"><div class="tl-fill" id="tlFill"></div></div>
+    <div class="tl-dots" id="tlDots"></div>
+    <div class="tl-time" id="tlTime">0:00</div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}
+</script>
+<script type="module">
+import * as THREE from 'three';
+import{OrbitControls}from'three/addons/controls/OrbitControls.js';
+import{EffectComposer}from'three/addons/postprocessing/EffectComposer.js';
+import{RenderPass}from'three/addons/postprocessing/RenderPass.js';
+import{UnrealBloomPass}from'three/addons/postprocessing/UnrealBloomPass.js';
+import{CSS2DRenderer,CSS2DObject}from'three/addons/renderers/CSS2DRenderer.js';
+
+/* ═══════════════════════════════════════
+   SCENE
+   ═══════════════════════════════════════ */
+const W=window.innerWidth,H=window.innerHeight;
+const scene=new THREE.Scene();
+scene.background=new THREE.Color(0x020617);
+scene.fog=new THREE.FogExp2(0x020617,0.004);
+
+const camera=new THREE.PerspectiveCamera(50,W/H,0.1,500);
+camera.position.set(0,50,70);
+
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setSize(W,H);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.2;
+document.getElementById('canvas-wrap').appendChild(renderer.domElement);
+
+const labelRenderer=new CSS2DRenderer();
+labelRenderer.setSize(W,H);
+labelRenderer.domElement.style.position='absolute';labelRenderer.domElement.style.top='0';labelRenderer.domElement.style.pointerEvents='none';
+document.getElementById('canvas-wrap').appendChild(labelRenderer.domElement);
+
+const composer=new EffectComposer(renderer);
+composer.addPass(new RenderPass(scene,camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(W,H),1.4,0.5,0.1));
+
+const controls=new OrbitControls(camera,renderer.domElement);
+controls.target.set(0,13,0);controls.enableDamping=true;controls.dampingFactor=0.06;
+controls.autoRotate=false;controls.autoRotateSpeed=0.35;
+controls.minDistance=15;controls.maxDistance=80;controls.maxPolarAngle=Math.PI*0.47;
+controls.update();
+
+/* ═══════════════════════════════════════
+   LIGHTS
+   ═══════════════════════════════════════ */
+scene.add(new THREE.AmbientLight(0xffffff,0.1));
+const dl=new THREE.DirectionalLight(0xdbeafe,0.25);dl.position.set(10,45,10);scene.add(dl);
+[[0x3b82f6,0.3,-25,25,20],[0x8b5cf6,0.2,25,10,-20],[0x10b981,0.12,0,18,25]].forEach(([c,i,x,y,z])=>{const l=new THREE.PointLight(c,i,80);l.position.set(x,y,z);scene.add(l);});
+
+/* ═══════════════════════════════════════
+   ENVIRONMENT
+   ═══════════════════════════════════════ */
+const grid=new THREE.GridHelper(80,60,0x1e293b,0x0f172a);grid.position.y=-2.5;scene.add(grid);
+
+const SC=5000;const sp=new Float32Array(SC*3);
+for(let i=0;i<SC;i++){sp[i*3]=(Math.random()-.5)*280;sp[i*3+1]=Math.random()*130+5;sp[i*3+2]=(Math.random()-.5)*280;}
+const sGeo=new THREE.BufferGeometry();sGeo.setAttribute('position',new THREE.BufferAttribute(sp,3));
+scene.add(new THREE.Points(sGeo,new THREE.PointsMaterial({color:0xffffff,size:0.07,transparent:true,opacity:0.4,sizeAttenuation:true})));
+
+// Atmospheric glow
+const gc=document.createElement('canvas');gc.width=128;gc.height=128;
+const gx=gc.getContext('2d');const gg=gx.createRadialGradient(64,64,0,64,64,64);
+gg.addColorStop(0,'rgba(255,255,255,.2)');gg.addColorStop(1,'rgba(255,255,255,0)');
+gx.fillStyle=gg;gx.fillRect(0,0,128,128);const gTex=new THREE.CanvasTexture(gc);
+[[0x3b82f6,-18,24,12],[0x8b5cf6,16,10,-15],[0x06b6d4,-5,32,-18]].forEach(([c,x,y,z])=>{
+    const s=new THREE.Sprite(new THREE.SpriteMaterial({map:gTex,color:c,transparent:true,opacity:0.025,blending:THREE.AdditiveBlending}));
+    s.scale.set(55,55,1);s.position.set(x,y,z);scene.add(s);
+});
+
+// Scan rings
+const sr1=new THREE.Mesh(new THREE.TorusGeometry(7,.02,16,120),new THREE.MeshBasicMaterial({color:0x3b82f6,transparent:true,opacity:0}));
+sr1.rotation.x=Math.PI/2;scene.add(sr1);
+const sr2=new THREE.Mesh(new THREE.TorusGeometry(10,.015,16,120),new THREE.MeshBasicMaterial({color:0x8b5cf6,transparent:true,opacity:0}));
+sr2.rotation.x=Math.PI/2;scene.add(sr2);
+
+/* ═══════════════════════════════════════
+   ARCHITECTURE DATA
+   ═══════════════════════════════════════ */
+const LAYERS=[
+    {nm:'INFRASTRUCTURE',y:0,c:0x475569,pw:22,pd:10,ph:'foundation',
+     cs:[{x:-6,z:0,n:'Terraform',s:'Infrastructure as Code'},{x:0,z:0,n:'ECS Fargate',s:'Serverless Containers'},{x:6,z:0,n:'CI/CD Pipeline',s:'GitHub Actions'}]},
+    {nm:'DATA STORAGE',y:5.5,c:0xf59e0b,pw:22,pd:10,ph:'foundation',
+     cs:[{x:-6,z:0,n:'PostgreSQL 16',s:'RLS · Partitioned'},{x:0,z:0,n:'Redis 7',s:'Cache · Job Queue'},{x:6,z:0,n:'S3 Storage',s:'Objects · Backups'}]},
+    {nm:'DATA PIPELINE',y:11,c:0x06b6d4,pw:28,pd:10,ph:'integrations',
+     cs:[{x:-9,z:0,n:'Scheduler',s:'BullMQ · 1-24hr'},{x:-3,z:0,n:'Connectors',s:'Meta · IG · LI · GA4'},{x:3,z:0,n:'Normalizer',s:'Schema Transform'},{x:9,z:0,n:'Retry / DLQ',s:'Error Handling'}]},
+    {nm:'APPLICATION CORE',y:16.5,c:0x10b981,pw:28,pd:10,ph:'application',
+     cs:[{x:-9,z:0,n:'API Gateway',s:'Rate Limiting · Routing'},{x:-3,z:0,n:'Auth Engine',s:'JWT · OAuth 2.0'},{x:3,z:0,n:'Tenant Engine',s:'Multi-Tenancy · RLS'},{x:9,z:0,n:'Core API',s:'NestJS · REST'}]},
+    {nm:'EDGE & SECURITY',y:22,c:0x8b5cf6,pw:20,pd:8,ph:'application',
+     cs:[{x:-4.5,z:0,n:'WAF & Shield',s:'DDoS · OWASP'},{x:4.5,z:0,n:'Next.js + CDN',s:'SSR · CloudFront'}]},
+    {nm:'USERS',y:27.5,c:0x3b82f6,pw:14,pd:7,ph:'users',
+     cs:[{x:0,z:0,n:'Users & Personas',s:'Managers · CMOs · Agencies'}]},
+];
+const ISLANDS=[
+    {nm:'AI INTELLIGENCE',ox:18,oy:14,oz:0,c:0xec4899,pw:13,pd:7,ph:'ai',
+     cs:[{x:-3,z:0,n:'NL Query Engine',s:'Text-to-SQL'},{x:3,z:0,n:'LLM',s:'GPT-4o · Claude'}]},
+    {nm:'OBSERVABILITY',ox:-18,oy:8,oz:0,c:0x6366f1,pw:13,pd:7,ph:'observability',
+     cs:[{x:-3,z:0,n:'Monitoring',s:'Datadog · Sentry'},{x:3,z:0,n:'Alerting',s:'PagerDuty · Slack'}]},
+];
+
+/* ═══════════════════════════════════════
+   BUILDERS
+   ═══════════════════════════════════════ */
+const phaseEls={foundation:[],integrations:[],application:[],users:[],ai:[],observability:[]};
+const pMats=[];
+function hex(c){return '#'+new THREE.Color(c).getHexString()}
+
+function mkPlatform(w,d,y,c,ox=0,oz=0,ph){
+    const g=new THREE.Group();g.scale.set(.001,.001,.001);
+    const m=new THREE.MeshStandardMaterial({color:c,transparent:true,opacity:.08,emissive:c,emissiveIntensity:.2,roughness:.2,metalness:.85,side:THREE.DoubleSide});
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(w,.12,d),m));pMats.push(m);
+    g.add(new THREE.LineSegments(new THREE.EdgesGeometry(new THREE.BoxGeometry(w,.12,d)),new THREE.LineBasicMaterial({color:c,transparent:true,opacity:.3})));
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(w+.3,.02,d+.3),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.04})));
+    g.position.set(ox,y,oz);scene.add(g);
+    phaseEls[ph].push(g);
+    // layer label
+    const el=document.createElement('div');el.className='ly-label';el.textContent='';el.style.color=hex(c);el.style.opacity='0';
+    const css=new CSS2DObject(el);css.position.set(ox-w/2+1,y+.5,oz-d/2+.5);scene.add(css);
+    g.userData={labelEl:el,labelText:''};
+    return g;
+}
+
+function mkComp(x,y,z,c,name,sub,ph){
+    const g=new THREE.Group();g.scale.set(.001,.001,.001);
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(2.4,1.4,2.4),new THREE.MeshStandardMaterial({color:0x0f172a,emissive:c,emissiveIntensity:.28,roughness:.35,metalness:.65,transparent:true,opacity:.9})));
+    const top=new THREE.Mesh(new THREE.BoxGeometry(2.42,.06,2.42),new THREE.MeshStandardMaterial({color:c,emissive:c,emissiveIntensity:.75,roughness:.1,metalness:.95}));
+    top.position.y=.73;g.add(top);
+    g.add(new THREE.Mesh(new THREE.BoxGeometry(1.6,.8,1.6),new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:.04})));
+    const el=document.createElement('div');el.className='nd-label';el.style.setProperty('--c',hex(c));
+    el.innerHTML=`<div class="nd-name">${name}</div><div class="nd-sub">${sub}</div>`;el.style.opacity='0';
+    const css=new CSS2DObject(el);css.position.set(0,1.5,0);g.add(css);
+    g.position.set(x,y+.78,z);g.userData={labelEl:el,baseY:y+.78,idx:phaseEls[ph].length};
+    scene.add(g);phaseEls[ph].push(g);
+    return g;
+}
+
+/* ═══════════════════════════════════════
+   BUILD SCENE
+   ═══════════════════════════════════════ */
+for(const L of LAYERS){
+    const p=mkPlatform(L.pw,L.pd,L.y,L.c,0,0,L.ph);p.userData.labelText=L.nm;
+    for(const c of L.cs)mkComp(c.x,L.y,c.z,L.c,c.n,c.s,L.ph);
+}
+for(const I of ISLANDS){
+    const p=mkPlatform(I.pw,I.pd,I.oy,I.c,I.ox,I.oz,I.ph);p.userData.labelText=I.nm;
+    for(const c of I.cs)mkComp(I.ox+c.x,I.oy,I.oz+c.z,I.c,c.n,c.s,I.ph);
+}
+
+// Central spine
+const spine=new THREE.Mesh(new THREE.CylinderGeometry(.05,.05,33,16),new THREE.MeshBasicMaterial({color:0x3b82f6,transparent:true,opacity:0}));
+spine.position.y=14;scene.add(spine);
+
+/* ═══════════════════════════════════════
+   BEAMS
+   ═══════════════════════════════════════ */
+const beams=[];
+function mkBeam(a,b,c,op,phases){
+    const cu=new THREE.LineCurve3(new THREE.Vector3(...a),new THREE.Vector3(...b));
+    const m=new THREE.MeshBasicMaterial({color:c,transparent:true,opacity:0});
+    const mesh=new THREE.Mesh(new THREE.TubeGeometry(cu,1,.03,8,false),m);
+    scene.add(mesh);beams.push({mesh,targetOp:op,phases});
+}
+mkBeam([0,-2,0],[0,29,0],0x3b82f6,.03,['foundation']);
+mkBeam([-6,5.5,0],[-6,0,0],0xf59e0b,.05,['foundation']);
+mkBeam([0,5.5,0],[0,0,0],0xf59e0b,.05,['foundation']);
+mkBeam([-3,11,0],[-6,5.5,0],0x06b6d4,.05,['foundation','integrations']);
+mkBeam([3,11,0],[-6,5.5,0],0x06b6d4,.05,['foundation','integrations']);
+mkBeam([9,16.5,0],[-6,5.5,0],0x10b981,.05,['foundation','application']);
+mkBeam([9,16.5,0],[0,5.5,0],0x10b981,.04,['foundation','application']);
+mkBeam([4.5,22,0],[-9,16.5,0],0x8b5cf6,.05,['application']);
+mkBeam([0,27.5,0],[4.5,22,0],0x3b82f6,.05,['application','users']);
+mkBeam([9,16.5,0],[15,14,0],0xec4899,.07,['application','ai']);
+mkBeam([18,14,0],[-6,5.5,0],0xec4899,.03,['foundation','ai']);
+mkBeam([-9,16.5,0],[-15,8,0],0x6366f1,.05,['application','observability']);
+
+/* ═══════════════════════════════════════
+   DATA FLOWS
+   ═══════════════════════════════════════ */
+const flows=[];
+function mkFlow(id,waypoints,color,speed,count){
+    const pts=waypoints.map(p=>new THREE.Vector3(...p));
+    const curve=new THREE.CatmullRomCurve3(pts,false,'catmullrom',.5);
+    const tMat=new THREE.MeshBasicMaterial({color,transparent:true,opacity:0});
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve,100,.03,8,false),tMat));
+    const offsets=Array.from({length:count},()=>Math.random());
+    const posArr=new Float32Array(count*3);
+    const pGeo=new THREE.BufferGeometry();pGeo.setAttribute('position',new THREE.BufferAttribute(posArr,3));
+    const pMat=new THREE.PointsMaterial({color:0xffffff,size:.22,sizeAttenuation:true,transparent:true,opacity:0,blending:THREE.AdditiveBlending});
+    scene.add(new THREE.Points(pGeo,pMat));
+    flows.push({id,curve,offsets,posArr,pGeo,speed,pMat,tMat});
+}
+mkFlow('user',[[0,29,0],[3,26,1.5],[4.5,23,0],[-4,20,-1],[-9,17.5,0],[0,17,.5],[9,17.5,0],[4,12,-1],[-6,6.5,0]],0x60a5fa,.055,30);
+mkFlow('data',[[-3,11,-7],[-3,11.5,-4],[-3,12,0],[0,12.2,0],[3,12,0],[0,9,-.5],[-6,6.5,0]],0x22d3ee,.045,22);
+mkFlow('ai',[[9,17.5,0],[12,16,1],[15,14.5,0],[18,14.5,0],[21,14.5,0],[14,10,-1],[-2,7,0],[-6,6.5,0]],0xf472b6,.04,18);
+
+/* ═══════════════════════════════════════
+   CHAPTERS
+   ═══════════════════════════════════════ */
+const chapters=[
+    {badge:'',title:'Marketing Intelligence\nPlatform',sub:'',desc:'A unified multi-tenant SaaS dashboard consolidating Meta, Instagram, LinkedIn & Google Analytics into one intelligent view.',dur:4,
+     cam:{p:[0,50,70],t:[0,10,0]},show:[],flows:[],stats:[]},
+    {badge:'PHASE 1 · WEEKS 1-3',title:'Foundation',sub:'Multi-Tenant Core & Authentication',
+     desc:'PostgreSQL 16 with Row-Level Security enforcing tenant isolation at the database kernel level. JWT authentication, RBAC, and encrypted OAuth token storage.',dur:5,
+     cam:{p:[25,8,25],t:[0,3,0]},show:['foundation'],flows:[],stats:[]},
+    {badge:'PHASE 2 · WEEKS 4-6',title:'Platform\nIntegrations',sub:'OAuth Connectors & API Abstraction',
+     desc:'Abstract connector pattern for Meta Graph API, Instagram Graph API, LinkedIn Marketing API, and Google Analytics 4 Data API. Auto-refreshing encrypted tokens.',dur:5,
+     cam:{p:[22,16,22],t:[0,11,0]},show:['foundation','integrations'],flows:['data'],stats:[]},
+    {badge:'PHASE 3-4 · WEEKS 7-11',title:'Application\n& Dashboard',sub:'API Layer & Next.js Frontend',
+     desc:'NestJS REST API with tenant context middleware. Next.js 14 SSR dashboard with Recharts visualization, date range filtering, and persona-driven views.',dur:5,
+     cam:{p:[20,24,20],t:[0,19,0]},show:['foundation','integrations','application'],flows:['data'],stats:[]},
+    {badge:'PHASE 5 · WEEKS 12-13',title:'Reliability\n& Security',sub:'Monitoring · Hardening · Load Testing',
+     desc:'Datadog APM with custom sync health dashboards. Sentry error tracking. OWASP ZAP security scanning. k6 load testing. Automated backup & disaster recovery.',dur:5,
+     cam:{p:[-28,14,18],t:[-18,8,0]},show:['foundation','integrations','application','observability'],flows:['data'],stats:[]},
+    {badge:'PHASE 6 · WEEKS 14-16',title:'AI Intelligence\nLayer',sub:'Natural Language Queries · Text-to-SQL',
+     desc:'LangChain.js + GPT-4o powered query engine. Users ask questions in plain English and get answers grounded in their tenant-scoped structured marketing data.',dur:5,
+     cam:{p:[30,18,10],t:[18,14,0]},show:['foundation','integrations','application','observability','ai'],flows:['data','ai'],stats:[]},
+    {badge:'LAUNCH · WEEK 16',title:'Complete\nPlatform',sub:'All Systems Live',
+     desc:'Marketing Managers, CMOs, Business Owners, and Agencies — all served from one enterprise-grade multi-tenant platform with real-time data and AI insights.',dur:5,
+     cam:{p:[38,34,38],t:[0,14,0]},show:['foundation','integrations','application','observability','ai','users'],flows:['user','data','ai'],stats:[]},
+    {badge:'',title:'Enterprise-Grade\nArchitecture',sub:'Secure · Scalable · Production-Ready',
+     desc:'Row-Level Security for data isolation. Automated sync pipeline. Historical data warehouse. AI-powered insights. Built to scale from 10 to 5,000 tenants.',dur:7,
+     cam:{p:[42,30,42],t:[0,13,0]},show:['foundation','integrations','application','observability','ai','users'],flows:['user','data','ai'],
+     stats:[{v:'16',l:'Weeks'},{v:'6',l:'Phases'},{v:'4',l:'Integrations'},{v:'~$7',l:'/Tenant/Mo'},{v:'99.9%',l:'Uptime SLA'}]},
+];
+
+// Build timeline dots
+const dotsEl=document.getElementById('tlDots');
+chapters.forEach((_,i)=>{
+    const b=document.createElement('button');b.className='tl-dot';b.textContent=i+1;
+    b.onclick=()=>goToChapter(i);dotsEl.appendChild(b);
+});
+
+/* ═══════════════════════════════════════
+   CHAPTER ENGINE
+   ═══════════════════════════════════════ */
+let currentCh=0,chTime=0,playing=false,started=false;
+const camPos=new THREE.Vector3(),camTgt=new THREE.Vector3();
+const tPos=new THREE.Vector3(),tTgt=new THREE.Vector3();
+
+function setChapter(i){
+    currentCh=Math.max(0,Math.min(chapters.length-1,i));chTime=0;
+    const ch=chapters[currentCh];
+    tPos.set(...ch.cam.p);tTgt.set(...ch.cam.t);
+    transitionText(ch);updateTimeline();
+}
+
+function goToChapter(i){
+    setChapter(i);
+    controls.autoRotate=false;
+}
+
+function transitionText(ch){
+    const o=document.getElementById('chOverlay');
+    o.classList.add('hide');
+    setTimeout(()=>{
+        document.getElementById('chBadge').textContent=ch.badge;
+        document.getElementById('chTitle').textContent=ch.title;
+        document.getElementById('chSub').textContent=ch.sub;
+        document.getElementById('chDesc').textContent=ch.desc;
+        const statsEl=document.getElementById('chStats');
+        statsEl.innerHTML=ch.stats.map(s=>`<div><div class="ch-stat-val">${s.v}</div><div class="ch-stat-lbl">${s.l}</div></div>`).join('');
+        o.classList.remove('hide');
+    },400);
+}
+
+function updateTimeline(){
+    document.querySelectorAll('.tl-dot').forEach((d,i)=>{
+        d.classList.toggle('now',i===currentCh);
+        d.classList.toggle('done',i<currentCh);
+    });
+}
+
+function updateTimeDisplay(){
+    let elapsed=0;for(let i=0;i<currentCh;i++)elapsed+=chapters[i].dur;elapsed+=chTime;
+    const total=chapters.reduce((a,c)=>a+c.dur,0);
+    const fmt=s=>{const m=Math.floor(s/60);return m+':'+(''+(Math.floor(s)%60)).padStart(2,'0');};
+    document.getElementById('tlTime').textContent=fmt(elapsed)+' / '+fmt(total);
+    const pct=elapsed/total*100;
+    document.getElementById('tlFill').style.width=pct+'%';
+}
+
+/* ═══════════════════════════════════════
+   VISIBILITY ENGINE
+   ═══════════════════════════════════════ */
+function updateVisibility(){
+    const ch=chapters[currentCh];
+    const active=ch.show;
+    for(const[phase,els]of Object.entries(phaseEls)){
+        const show=active.includes(phase);
+        for(const el of els){
+            const target=show?1:.001;
+            const s=THREE.MathUtils.lerp(el.scale.x,target,.055);
+            el.scale.set(s,s,s);
+            if(el.userData.labelEl){
+                el.userData.labelEl.style.opacity=s>.6?'1':'0';
+                if(el.userData.labelText&&s>.6){
+                    el.userData.labelEl.textContent=el.userData.labelText;
+                    el.userData.labelEl.style.opacity='.3';
+                }
+            }
+        }
+    }
+    // Spine
+    const spineShow=active.length>0;
+    spine.material.opacity=THREE.MathUtils.lerp(spine.material.opacity,spineShow?.03:0,.05);
+    // Beams
+    for(const b of beams){
+        const vis=b.phases.every(p=>active.includes(p));
+        b.mesh.material.opacity=THREE.MathUtils.lerp(b.mesh.material.opacity,vis?b.targetOp:0,.04);
+    }
+    // Flows
+    for(const f of flows){
+        const on=ch.flows.includes(f.id);
+        f.pMat.opacity=THREE.MathUtils.lerp(f.pMat.opacity,on?.85:0,.04);
+        f.tMat.opacity=THREE.MathUtils.lerp(f.tMat.opacity,on?.1:0,.04);
+    }
+    // Scan rings
+    const anyVisible=active.length>1;
+    sr1.material.opacity=THREE.MathUtils.lerp(sr1.material.opacity,anyVisible?.04:0,.03);
+    sr2.material.opacity=THREE.MathUtils.lerp(sr2.material.opacity,anyVisible?.025:0,.03);
+}
+
+/* ═══════════════════════════════════════
+   ANIMATION LOOP
+   ═══════════════════════════════════════ */
+const clock=new THREE.Clock();
+
+function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),.05);
+    const t=clock.getElapsedTime();
+
+    // Chapter auto-advance
+    if(playing&&started){
+        chTime+=dt;
+        if(chTime>=chapters[currentCh].dur){
+            if(currentCh<chapters.length-1){setChapter(currentCh+1);}
+            else{playing=false;controls.autoRotate=true;document.getElementById('tlPlay').textContent='↺';}
+        }
+    }
+
+    // Camera smooth follow
+    camera.position.lerp(tPos,.022);
+    controls.target.lerp(tTgt,.022);
+    controls.update();
+
+    // Visibility
+    updateVisibility();
+
+    // Platform pulse
+    pMats.forEach((m,i)=>{m.emissiveIntensity=.17+.06*Math.sin(t*1.4+i*.7);});
+
+    // Component bob
+    for(const els of Object.values(phaseEls)){
+        for(const el of els){
+            if(el.userData.baseY!==undefined&&el.scale.x>.5){
+                el.position.y=el.userData.baseY+Math.sin(t*1.1+el.userData.idx*.35)*.06;
+            }
+        }
+    }
+
+    // Scan rings
+    sr1.position.y=((t*2.5)%34)-3;
+    sr2.position.y=((t*1.8+12)%34)-3;
+
+    // Flow particles
+    for(const f of flows){
+        if(f.pMat.opacity<.01)continue;
+        for(let i=0;i<f.offsets.length;i++){
+            f.offsets[i]=(f.offsets[i]+dt*f.speed)%1;
+            const pt=f.curve.getPoint(f.offsets[i]);
+            f.posArr[i*3]=pt.x;f.posArr[i*3+1]=pt.y;f.posArr[i*3+2]=pt.z;
+        }
+        f.pGeo.attributes.position.needsUpdate=true;
+    }
+
+    updateTimeDisplay();
+    composer.render();
+    labelRenderer.render(scene,camera);
+}
+
+/* ═══════════════════════════════════════
+   RESIZE
+   ═══════════════════════════════════════ */
+window.addEventListener('resize',()=>{
+    const w=innerWidth,h=innerHeight;
+    camera.aspect=w/h;camera.updateProjectionMatrix();
+    renderer.setSize(w,h);labelRenderer.setSize(w,h);composer.setSize(w,h);
+});
+
+/* ═══════════════════════════════════════
+   PUBLIC API
+   ═══════════════════════════════════════ */
+window._start=()=>{
+    document.getElementById('startScreen').classList.add('gone');
+    started=true;playing=true;
+    setChapter(0);
+    tPos.set(...chapters[0].cam.p);tTgt.set(...chapters[0].cam.t);
+};
+
+window._togglePlay=()=>{
+    if(!started){window._start();return;}
+    if(currentCh>=chapters.length-1&&!playing){
+        // Replay
+        playing=true;setChapter(0);controls.autoRotate=false;
+        document.getElementById('tlPlay').textContent='⏸';return;
+    }
+    playing=!playing;
+    if(playing)controls.autoRotate=false;
+    document.getElementById('tlPlay').textContent=playing?'⏸':'▶';
+};
+
+window._replay=()=>{
+    started=true;playing=true;controls.autoRotate=false;
+    setChapter(0);
+    document.getElementById('startScreen').classList.add('gone');
+    document.getElementById('tlPlay').textContent='⏸';
+};
+
+window._resetCam=()=>{
+    playing=false;controls.autoRotate=true;
+    tPos.set(42,30,42);tTgt.set(0,13,0);
+    setChapter(chapters.length-1);
+    document.getElementById('tlPlay').textContent='↺';
+};
+
+document.addEventListener('keydown',e=>{
+    if(e.code==='Space'){e.preventDefault();window._togglePlay();}
+    if(e.code==='KeyR'){window._replay();}
+    if(e.code==='ArrowRight'&&currentCh<chapters.length-1){goToChapter(currentCh+1);}
+    if(e.code==='ArrowLeft'&&currentCh>0){goToChapter(currentCh-1);}
+});
+
+/* ═══════════════════════════════════════
+   INIT
+   ═══════════════════════════════════════ */
+tPos.set(0,50,70);tTgt.set(0,10,0);
+animate();
+</script>
+</body>
+</html>

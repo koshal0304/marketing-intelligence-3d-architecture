@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>High-Level Architecture — 3D Command Center</title>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+*,*::before,*::after{margin:0;padding:0;box-sizing:border-box}
+body{background:#020617;font-family:'Inter',system-ui,sans-serif;overflow:hidden;color:#f1f5f9;width:100vw;height:100vh}
+#wrap{position:fixed;inset:0}
+.vig{position:fixed;inset:0;z-index:5;pointer-events:none;background:radial-gradient(ellipse at 50% 50%,transparent 45%,rgba(2,6,23,.55)100%)}
+
+/* START SCREEN */
+#startOv{position:fixed;inset:0;z-index:500;background:rgba(2,6,23,.97);display:flex;align-items:center;justify-content:center;flex-direction:column;transition:opacity .7s,visibility .7s}
+#startOv.gone{opacity:0;visibility:hidden;pointer-events:none}
+.so-icon{width:60px;height:60px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:16px;display:grid;place-items:center;font-weight:900;font-size:1.4rem;color:#fff;box-shadow:0 8px 40px rgba(59,130,246,.35);margin-bottom:1.5rem;animation:pg 2s ease-in-out infinite}
+@keyframes pg{0%,100%{box-shadow:0 8px 40px rgba(59,130,246,.35)}50%{box-shadow:0 8px 60px rgba(59,130,246,.55)}}
+.so-title{font-size:1.7rem;font-weight:800;background:linear-gradient(135deg,#fff 20%,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent;margin-bottom:.3rem}
+.so-sub{font-size:.65rem;color:#475569;letter-spacing:.15em;text-transform:uppercase;margin-bottom:2.2rem}
+.so-play{background:linear-gradient(135deg,rgba(59,130,246,.15),rgba(139,92,246,.15));border:1px solid rgba(59,130,246,.4);color:#93c5fd;padding:.7rem 2rem;border-radius:12px;font-size:.85rem;font-weight:600;font-family:inherit;cursor:pointer;display:flex;align-items:center;gap:.5rem;transition:all .3s}
+.so-play:hover{background:linear-gradient(135deg,rgba(59,130,246,.3),rgba(139,92,246,.3));box-shadow:0 0 30px rgba(59,130,246,.25);transform:scale(1.03)}
+.so-hint{margin-top:.8rem;font-size:.58rem;color:#334155}
+
+/* CHAPTER TEXT */
+#chOv{position:fixed;left:2.5rem;top:50%;transform:translateY(-50%);max-width:380px;z-index:60;transition:opacity .5s,transform .5s;pointer-events:none}
+#chOv.hide{opacity:0;transform:translateY(-40%) translateX(-15px)}
+.ch-badge{font-size:.55rem;font-weight:800;letter-spacing:.2em;text-transform:uppercase;color:#60a5fa;display:inline-block;background:rgba(59,130,246,.1);border:1px solid rgba(59,130,246,.2);padding:.18rem .6rem;border-radius:16px;margin-bottom:.5rem}
+.ch-title{font-size:2.2rem;font-weight:900;line-height:1.05;margin-bottom:.35rem;letter-spacing:-.04em;background:linear-gradient(135deg,#fff 30%,#64748b);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ch-sub{font-size:.78rem;color:#475569;margin-bottom:.8rem;font-weight:500}
+.ch-desc{font-size:.75rem;color:#94a3b8;line-height:1.7;border-left:2px solid rgba(59,130,246,.2);padding-left:.9rem}
+.ch-stats{display:flex;gap:1.2rem;margin-top:1rem}
+.ch-sv{font-size:1.2rem;font-weight:800;background:linear-gradient(135deg,#3b82f6,#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.ch-sl{font-size:.45rem;color:#475569;text-transform:uppercase;letter-spacing:.06em}
+
+/* TIMELINE */
+#timeline{position:fixed;bottom:0;left:0;right:0;height:48px;background:rgba(2,6,23,.92);border-top:1px solid rgba(148,163,184,.06);display:flex;align-items:center;padding:0 1.2rem;z-index:100;backdrop-filter:blur(16px);gap:.6rem}
+.tl-play{width:34px;height:34px;background:rgba(59,130,246,.12);border:1px solid rgba(59,130,246,.25);border-radius:50%;color:#93c5fd;font-size:.8rem;cursor:pointer;display:grid;place-items:center;transition:all .3s;font-family:inherit;flex-shrink:0}
+.tl-play:hover{background:rgba(59,130,246,.25);box-shadow:0 0 12px rgba(59,130,246,.25)}
+.tl-bar{flex:1;height:3px;background:rgba(148,163,184,.08);border-radius:2px;position:relative}
+.tl-fill{position:absolute;top:0;left:0;height:100%;background:linear-gradient(90deg,#3b82f6,#8b5cf6);border-radius:2px;transition:width .3s linear}
+.tl-dots{display:flex;gap:.3rem;flex-shrink:0}
+.tl-dot{width:24px;height:24px;border-radius:50%;border:1.5px solid rgba(148,163,184,.1);background:transparent;color:#475569;font-size:.45rem;font-weight:700;cursor:pointer;display:grid;place-items:center;font-family:inherit;transition:all .3s}
+.tl-dot.now{border-color:#3b82f6;color:#60a5fa;box-shadow:0 0 8px rgba(59,130,246,.2)}
+.tl-dot.done{border-color:#10b981;color:#10b981}
+.tl-time{font-size:.6rem;color:#334155;font-variant-numeric:tabular-nums;flex-shrink:0;min-width:40px;text-align:right}
+
+/* HEADER */
+.hdr{position:fixed;top:0;left:0;right:0;z-index:100;padding:.7rem 1.2rem;display:flex;align-items:center;justify-content:space-between;background:linear-gradient(180deg,rgba(2,6,23,.92)60%,transparent);pointer-events:none}
+.hdr>*{pointer-events:auto}
+.brand{display:flex;align-items:center;gap:.55rem}
+.b-icon{width:32px;height:32px;background:linear-gradient(135deg,#3b82f6,#8b5cf6);border-radius:8px;display:grid;place-items:center;font-weight:900;font-size:.7rem;color:#fff;box-shadow:0 3px 12px rgba(59,130,246,.3)}
+.brand h1{font-size:.8rem;font-weight:700;background:linear-gradient(135deg,#fff,#94a3b8);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+.brand p{font-size:.45rem;color:#334155;letter-spacing:.1em;text-transform:uppercase}
+.ctrls{display:flex;gap:.25rem;flex-wrap:wrap;align-items:center}
+.btn{background:rgba(15,23,42,.7);backdrop-filter:blur(10px);border:1px solid rgba(148,163,184,.08);color:#94a3b8;padding:.3rem .6rem;border-radius:6px;font-size:.55rem;font-family:inherit;cursor:pointer;transition:all .25s;font-weight:500;white-space:nowrap}
+.btn:hover{background:rgba(30,41,59,.85);color:#e2e8f0;border-color:rgba(148,163,184,.15)}
+.btn.on{background:rgba(59,130,246,.15);border-color:rgba(59,130,246,.3);color:#93c5fd}
+.sep{width:1px;height:18px;background:rgba(148,163,184,.08);margin:0 .15rem}
+.fb{display:flex;align-items:center;gap:.35rem}
+.fb::before{content:'';width:7px;height:7px;border-radius:50%;background:var(--fc)}
+
+/* PANEL */
+#panel{position:fixed;top:56px;right:12px;width:290px;background:rgba(15,23,42,.94);border:1px solid rgba(148,163,184,.08);border-radius:12px;padding:1rem;backdrop-filter:blur(20px);z-index:200;transform:translateX(320px);transition:transform .35s cubic-bezier(.16,1,.3,1);box-shadow:0 20px 40px rgba(0,0,0,.4)}
+#panel.open{transform:translateX(0)}
+.pn-close{position:absolute;top:.6rem;right:.6rem;background:none;border:none;color:#475569;font-size:.9rem;cursor:pointer}
+.pn-hdr{display:flex;align-items:center;gap:.5rem;margin-bottom:.4rem}
+.pn-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.pn-hdr h3{font-size:.85rem;font-weight:700}
+.pn-zone{font-size:.48rem;color:#475569;letter-spacing:.08em;text-transform:uppercase;margin-bottom:.5rem}
+.pn-desc{font-size:.72rem;color:#94a3b8;line-height:1.6;margin-bottom:.6rem;padding-bottom:.5rem;border-bottom:1px solid rgba(148,163,184,.06)}
+.pn-features{list-style:none}
+.pn-features li{font-size:.68rem;color:#64748b;padding:.2rem 0;display:flex;gap:.35rem}
+.pn-features li::before{content:'→';color:var(--gc,#3b82f6);font-weight:600;flex-shrink:0}
+.pn-tags{margin-top:.6rem;padding-top:.4rem;border-top:1px solid rgba(148,163,184,.06);display:flex;flex-wrap:wrap;gap:.2rem}
+.pn-tag{font-size:.52rem;padding:.1rem .35rem;border-radius:4px;background:rgba(59,130,246,.08);border:1px solid rgba(59,130,246,.12);color:#60a5fa}
+
+/* LEGEND */
+.legend{position:fixed;bottom:56px;left:.8rem;background:rgba(15,23,42,.85);backdrop-filter:blur(14px);border:1px solid rgba(148,163,184,.06);border-radius:10px;padding:.55rem .75rem;z-index:100}
+.lg-title{font-size:.45rem;font-weight:700;letter-spacing:.12em;text-transform:uppercase;color:#334155;margin-bottom:.3rem}
+.lg-grid{display:grid;grid-template-columns:1fr 1fr;gap:.15rem .6rem}
+.lg-item{display:flex;align-items:center;gap:.25rem;font-size:.52rem;color:#64748b}
+.lg-dot{width:5px;height:5px;border-radius:50%;flex-shrink:0}
+
+/* 3D LABELS */
+.nl{font-family:'JetBrains Mono',monospace;font-size:7.5px;color:#94a3b8;text-align:center;white-space:nowrap;pointer-events:none;text-shadow:0 0 10px rgba(2,6,23,.9);transition:all .4s}
+.nl.dim{opacity:.1!important}
+.nl.bright{color:#f1f5f9;text-shadow:0 0 12px var(--gc)}
+.zl{font-family:'JetBrains Mono',monospace;font-size:6.5px;font-weight:700;letter-spacing:.16em;text-transform:uppercase;pointer-events:none;opacity:.2}
+.fm{font-family:'JetBrains Mono',monospace;font-weight:800;font-size:9px;letter-spacing:.12em;padding:3px 8px;border-radius:5px;white-space:nowrap;pointer-events:none;transition:opacity .4s;opacity:0}
+.fm.st{background:rgba(34,197,94,.15);border:1px solid rgba(34,197,94,.35);color:#22c55e;text-shadow:0 0 8px rgba(34,197,94,.5)}
+.fm.en{background:rgba(239,68,68,.15);border:1px solid rgba(239,68,68,.35);color:#ef4444;text-shadow:0 0 8px rgba(239,68,68,.5)}
+.fm.vis{opacity:1}
+</style>
+</head>
+<body>
+<div id="wrap"></div><div class="vig"></div>
+
+<!-- START -->
+<div id="startOv">
+<div class="so-icon">MI</div>
+<div class="so-title">Marketing Intelligence Platform</div>
+<div class="so-sub">High-Level Architecture · 3D Interactive Presentation</div>
+<button class="so-play" onclick="W.startPlay()"><span>▶</span> Play Architecture Tour</button>
+<div class="so-hint">~50 second tour · Shows complete data flow patterns with START → END paths</div>
+</div>
+
+<!-- CHAPTER TEXT -->
+<div id="chOv" class="hide">
+<div class="ch-badge" id="chB"></div>
+<div class="ch-title" id="chT"></div>
+<div class="ch-sub" id="chS"></div>
+<div class="ch-desc" id="chD"></div>
+<div class="ch-stats" id="chSt"></div>
+</div>
+
+<!-- HEADER -->
+<header class="hdr">
+<div class="brand"><div class="b-icon">MI</div><div><h1>High-Level Architecture</h1><p>Command Center · 3D Blueprint</p></div></div>
+<div class="ctrls">
+<button class="btn fb" style="--fc:#60a5fa" onclick="W.selFlow('user')">User Request</button>
+<button class="btn fb" style="--fc:#22d3ee" onclick="W.selFlow('data')">Data Ingestion</button>
+<button class="btn fb" style="--fc:#f472b6" onclick="W.selFlow('ai')">AI Query</button>
+<button class="btn fb" style="--fc:#818cf8" onclick="W.selFlow('ops')">Observability</button>
+<div class="sep"></div>
+<button class="btn" onclick="W.selFlow(null)">Clear</button>
+<button class="btn" onclick="W.replay()">↺ Replay</button>
+<button class="btn" onclick="W.reset()">Reset</button>
+</div>
+</header>
+
+<!-- PANEL -->
+<div id="panel">
+<button class="pn-close" onclick="W.closeP()">✕</button>
+<div class="pn-hdr"><div class="pn-dot" id="pd"></div><h3 id="pt"></h3></div>
+<div class="pn-zone" id="pz"></div>
+<div class="pn-desc" id="pp"></div>
+<ul class="pn-features" id="pf"></ul>
+<div class="pn-tags" id="pk"></div>
+</div>
+
+<!-- LEGEND -->
+<div class="legend">
+<div class="lg-title">Zones</div>
+<div class="lg-grid">
+<div class="lg-item"><div class="lg-dot" style="background:#f59e0b"></div>Data Layer</div>
+<div class="lg-item"><div class="lg-dot" style="background:#10b981"></div>API & Logic</div>
+<div class="lg-item"><div class="lg-dot" style="background:#06b6d4"></div>Pipeline</div>
+<div class="lg-item"><div class="lg-dot" style="background:#8b5cf6"></div>Frontend</div>
+<div class="lg-item"><div class="lg-dot" style="background:#a855f7"></div>Edge</div>
+<div class="lg-item"><div class="lg-dot" style="background:#3b82f6"></div>Clients</div>
+<div class="lg-item"><div class="lg-dot" style="background:#ec4899"></div>AI Insights</div>
+<div class="lg-item"><div class="lg-dot" style="background:#6366f1"></div>Platform Ops</div>
+</div>
+</div>
+
+<!-- TIMELINE -->
+<div id="timeline">
+<button class="tl-play" id="tlPlay" onclick="W.togglePlay()">▶</button>
+<div class="tl-bar"><div class="tl-fill" id="tlFill"></div></div>
+<div class="tl-dots" id="tlDots"></div>
+<div class="tl-time" id="tlTime">0:00</div>
+</div>
+
+<script type="importmap">
+{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.164.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.164.1/examples/jsm/"}}
+</script>
+<script type="module">
+import*as THREE from'three';
+import{OrbitControls}from'three/addons/controls/OrbitControls.js';
+import{EffectComposer}from'three/addons/postprocessing/EffectComposer.js';
+import{RenderPass}from'three/addons/postprocessing/RenderPass.js';
+import{UnrealBloomPass}from'three/addons/postprocessing/UnrealBloomPass.js';
+import{CSS2DRenderer,CSS2DObject}from'three/addons/renderers/CSS2DRenderer.js';
+
+const W_=window.W={};
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x020617);scene.fog=new THREE.FogExp2(0x020617,.0022);
+const camera=new THREE.PerspectiveCamera(48,innerWidth/innerHeight,.1,500);camera.position.set(0,45,50);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2));
+renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.15;
+document.getElementById('wrap').appendChild(renderer.domElement);
+const labelR=new CSS2DRenderer();labelR.setSize(innerWidth,innerHeight);
+labelR.domElement.style.cssText='position:absolute;top:0;pointer-events:none';
+document.getElementById('wrap').appendChild(labelR.domElement);
+const composer=new EffectComposer(renderer);composer.addPass(new RenderPass(scene,camera));
+composer.addPass(new UnrealBloomPass(new THREE.Vector2(innerWidth,innerHeight),1.4,.45,.08));
+const oc=new OrbitControls(camera,renderer.domElement);
+oc.target.set(0,0,0);oc.enableDamping=true;oc.dampingFactor=.06;oc.autoRotate=false;oc.autoRotateSpeed=.2;
+oc.minDistance=12;oc.maxDistance=70;oc.maxPolarAngle=Math.PI*.44;oc.update();
+
+scene.add(new THREE.AmbientLight(0xffffff,.08));
+const dl=new THREE.DirectionalLight(0xdbeafe,.25);dl.position.set(10,40,10);scene.add(dl);
+[[0x3b82f6,.2,-20,20,15],[0x8b5cf6,.15,20,8,-15],[0xec4899,.1,-12,12,-12],[0x10b981,.1,15,15,20]].forEach(([c,i,x,y,z])=>{const l=new THREE.PointLight(c,i,80);l.position.set(x,y,z);scene.add(l)});
+const sN=4000,sA=new Float32Array(sN*3);for(let i=0;i<sN;i++){sA[i*3]=(Math.random()-.5)*280;sA[i*3+1]=Math.random()*120+5;sA[i*3+2]=(Math.random()-.5)*280}
+const starGeo=new THREE.BufferGeometry();starGeo.setAttribute('position',new THREE.BufferAttribute(sA,3));
+scene.add(new THREE.Points(starGeo,new THREE.PointsMaterial({color:0xffffff,size:.05,transparent:true,opacity:.3,sizeAttenuation:true})));
+
+/* RADAR BASE */
+const baseDisk=new THREE.Mesh(new THREE.CircleGeometry(30,128),new THREE.MeshBasicMaterial({color:0x0f172a,transparent:true,opacity:.25,side:THREE.DoubleSide}));
+baseDisk.rotation.x=-Math.PI/2;scene.add(baseDisk);
+const rR=[5,10,16,21.5,27],rC=[0xf59e0b,0x10b981,0x06b6d4,0x8b5cf6,0x3b82f6];
+rR.forEach((r,i)=>{const m=new THREE.Mesh(new THREE.TorusGeometry(r,.015,16,128),new THREE.MeshBasicMaterial({color:rC[i],transparent:true,opacity:.12}));m.rotation.x=-Math.PI/2;m.position.y=.01;scene.add(m)});
+for(let a=0;a<360;a+=30){const r=a*Math.PI/180;scene.add(new THREE.Line(new THREE.BufferGeometry().setFromPoints([new THREE.Vector3(0,.01,0),new THREE.Vector3(Math.cos(r)*30,.01,Math.sin(r)*30)]),new THREE.LineBasicMaterial({color:0x1e293b,transparent:true,opacity:.06})))}
+const pulses=[];for(let i=0;i<3;i++){const m=new THREE.Mesh(new THREE.TorusGeometry(1,.02,16,128),new THREE.MeshBasicMaterial({color:0x3b82f6,transparent:true,opacity:0}));m.rotation.x=-Math.PI/2;m.position.y=.02;scene.add(m);pulses.push(m)}
+
+/* NODE DATA */
+const CC={data:0xf59e0b,api:0x10b981,pipe:0x06b6d4,fe:0x8b5cf6,edge:0xa855f7,client:0x3b82f6,ai:0xec4899,ops:0x6366f1};
+const hex=c=>'#'+new THREE.Color(c).getHexString();
+const ND=[
+{id:'PG',n:'PostgreSQL 16 (RLS)',a:0,r:0,c:CC.data,z:'Data Layer',sz:.8,ri:0},
+{id:'Redis2',n:'Redis Cache',a:120,r:5,c:CC.data,z:'Data Layer',sz:.55,ri:1},
+{id:'S3',n:'S3 Object Storage',a:240,r:5,c:CC.data,z:'Data Layer',sz:.55,ri:1},
+{id:'CoreAPI',n:'Core Dashboard API',a:0,r:10,c:CC.api,z:'API',sz:.65,ri:2},
+{id:'Auth',n:'Auth Service (JWT+OAuth)',a:60,r:10,c:CC.api,z:'API',sz:.55,ri:2},
+{id:'GW',n:'API Gateway',a:120,r:10,c:CC.api,z:'API',sz:.55,ri:2},
+{id:'SyncAPI',n:'Sync Management API',a:180,r:10,c:CC.api,z:'API',sz:.55,ri:2},
+{id:'RBAC',n:'RBAC Middleware',a:260,r:10,c:CC.api,z:'API',sz:.5,ri:2},
+{id:'TenantMW',n:'Tenant Context MW',a:320,r:10,c:CC.api,z:'API',sz:.5,ri:2},
+{id:'Scheduler',n:'BullMQ Scheduler',a:10,r:16,c:CC.pipe,z:'Pipeline',sz:.55,ri:3},
+{id:'Queue',n:'Redis Job Queue',a:55,r:16,c:CC.pipe,z:'Pipeline',sz:.55,ri:3},
+{id:'MetaC',n:'Meta Connector',a:100,r:16,c:CC.pipe,z:'Pipeline',sz:.45,ri:3},
+{id:'IGC',n:'Instagram Connector',a:140,r:16,c:CC.pipe,z:'Pipeline',sz:.45,ri:3},
+{id:'GAC',n:'GA4 Connector',a:190,r:16,c:CC.pipe,z:'Pipeline',sz:.45,ri:3},
+{id:'LIC',n:'LinkedIn Connector',a:230,r:16,c:CC.pipe,z:'Pipeline',sz:.45,ri:3},
+{id:'Norm',n:'Normalization Engine',a:280,r:16,c:CC.pipe,z:'Pipeline',sz:.55,ri:3},
+{id:'Retry',n:'Retry / DLQ Handler',a:330,r:16,c:CC.pipe,z:'Pipeline',sz:.5,ri:3},
+{id:'NextApp',n:'Next.js 14 Dashboard',a:345,r:21.5,c:CC.fe,z:'Frontend',sz:.6,ri:4},
+{id:'Charts',n:'Recharts Visualization',a:15,r:21.5,c:CC.fe,z:'Frontend',sz:.5,ri:4},
+{id:'State',n:'TanStack + Zustand',a:45,r:21.5,c:CC.fe,z:'Frontend',sz:.5,ri:4},
+{id:'CDN',n:'CloudFront CDN',a:160,r:21.5,c:CC.edge,z:'Edge',sz:.55,ri:4},
+{id:'WAF',n:'AWS WAF',a:200,r:21.5,c:CC.edge,z:'Edge',sz:.55,ri:4},
+{id:'U1',n:'Business Owner',a:335,r:27,c:CC.client,z:'Client',sz:.5,ri:5},
+{id:'U2',n:'Marketing Manager',a:5,r:27,c:CC.client,z:'Client',sz:.5,ri:5},
+{id:'U3',n:'CMO / Head',a:35,r:27,c:CC.client,z:'Client',sz:.5,ri:5},
+{id:'U4',n:'Agency (Multi-Client)',a:65,r:27,c:CC.client,z:'Client',sz:.5,ri:5},
+{id:'NLQ',n:'NL Query Engine',a:248,r:11.5,c:CC.ai,z:'AI',sz:.55,ri:2.5},
+{id:'Cache2',n:'Response Cache',a:225,r:11,c:CC.ai,z:'AI',sz:.45,ri:2.5},
+{id:'T2S',n:'Text-to-SQL Pipeline',a:258,r:14.5,c:CC.ai,z:'AI',sz:.55,ri:2.5},
+{id:'LLM',n:'GPT-4o / Claude API',a:235,r:15,c:CC.ai,z:'AI',sz:.55,ri:2.5},
+{id:'CICD',n:'GitHub Actions + TF',a:112,r:11.5,c:CC.ops,z:'Ops',sz:.55,ri:2.5},
+{id:'Logs',n:'Structured Logging',a:100,r:14.5,c:CC.ops,z:'Ops',sz:.45,ri:2.5},
+{id:'Metrics',n:'Datadog APM',a:135,r:14,c:CC.ops,z:'Ops',sz:.55,ri:2.5},
+{id:'Alerts',n:'PagerDuty / Slack',a:148,r:11,c:CC.ops,z:'Ops',sz:.45,ri:2.5},
+];
+
+const CONNS=[['U1','CDN'],['U2','CDN'],['U3','CDN'],['U4','CDN'],['CDN','WAF'],['WAF','NextApp'],['NextApp','GW'],['GW','Auth'],['Auth','RBAC'],['RBAC','TenantMW'],['TenantMW','CoreAPI'],['GW','SyncAPI'],['CoreAPI','PG'],['CoreAPI','Redis2'],['SyncAPI','Queue'],['Scheduler','Queue'],['Queue','MetaC'],['Queue','IGC'],['Queue','LIC'],['Queue','GAC'],['MetaC','Norm'],['IGC','Norm'],['LIC','Norm'],['GAC','Norm'],['Norm','PG'],['Retry','Queue'],['CoreAPI','NLQ'],['NLQ','T2S'],['T2S','PG'],['T2S','LLM'],['NLQ','Cache2'],['CoreAPI','Logs'],['CoreAPI','Metrics'],['Metrics','Alerts']];
+
+/* DETAIL DATA */
+const DD={PG:{d:'Primary DB with Row-Level Security enforcing tenant isolation. Monthly partitioning for metrics.',f:['RLS on every tenant table','Monthly partitioning','PgBouncer pooling','PITR backups (35d)'],t:['PostgreSQL 16','RLS','AWS RDS']},Redis2:{d:'Cache for API responses (5min) and AI queries (1hr). Rate limit counters.',f:['Dashboard cache 5min','AI cache 1hr','Rate limit counters'],t:['Redis 7','ElastiCache']},S3:{d:'Object storage for reports, exports, and backup archives.',f:['PDF/CSV reports','DB backups','SSE-S3 encryption'],t:['AWS S3']},CoreAPI:{d:'Primary NestJS backend: dashboard data, metrics aggregation, user/org CRUD.',f:['GET /metrics/overview','GET /metrics/channels','CRUD /organizations','Pagination & filtering'],t:['NestJS 5','Prisma']},Auth:{d:'JWT HttpOnly cookies + OAuth 2.0. AES-256 encrypted tokens.',f:['JWT access 15m + refresh 7d','OAuth 2.0 per platform','AES-256-GCM encryption'],t:['JWT','OAuth 2.0']},GW:{d:'Central entry: rate limiting, validation, API versioning.',f:['100 req/min/user','Zod validation','API versioning /v1/'],t:['NestJS','Zod']},SyncAPI:{d:'Manages sync triggers, status, and connection health.',f:['Manual sync trigger','Sync log history','1-24hr frequency'],t:['NestJS','BullMQ']},RBAC:{d:'Guard decorators: Admin/Manager/Viewer access per endpoint.',f:['@Roles() decorator','3 role levels','Post-JWT validation'],t:['NestJS Guards']},TenantMW:{d:'JWT → org_id → PostgreSQL session var for RLS.',f:['SET app.current_tenant','Fails closed','RLS enforcement'],t:['NestJS MW','RLS']},Scheduler:{d:'BullMQ cron, staggered dispatch, configurable frequency.',f:['Default 6hr sync','Jitter dispatch','Priority queuing'],t:['BullMQ','Redis']},Queue:{d:'Redis persistent job queue. Jobs survive restarts.',f:['Persistent storage','Priority levels','DLQ support'],t:['BullMQ','Redis 7']},MetaC:{d:'Facebook Graph API v19.0 connector.',f:['Page daily metrics','Post performance','Story insights'],t:['Graph API v19.0']},IGC:{d:'Instagram Graph API connector.',f:['Profile reach','Post engagement','Follower demos'],t:['IG Graph API']},GAC:{d:'GA4 Data API v1 connector.',f:['Sessions/users','Traffic sources','Device analysis'],t:['GA4 Data API']},LIC:{d:'LinkedIn Marketing API v2 connector.',f:['Company followers','Post metrics','Engagement rate'],t:['LinkedIn API v2']},Norm:{d:'Platform responses → unified daily_metrics schema.',f:['Unified schema mapping','Engagement calc','Zod validation'],t:['TypeScript','Zod']},Retry:{d:'3-attempt exponential backoff. DLQ + Slack alerts.',f:['Exponential backoff','429 rate limit handling','DLQ alerts'],t:['BullMQ']},NextApp:{d:'Next.js 14 App Router SSR dashboard.',f:['SSR for performance','Streaming SSR','BFF pattern'],t:['Next.js 14','React 18']},Charts:{d:'Recharts + Tremor visualization layer.',f:['Responsive charts','Animated transitions','PNG export'],t:['Recharts','Tremor']},State:{d:'TanStack Query (server) + Zustand (UI) state.',f:['SWR caching','Background refetch','Query invalidation'],t:['TanStack Query']},CDN:{d:'CloudFront global edge delivery.',f:['Global edge','1yr immutable cache','Brotli compression'],t:['CloudFront']},WAF:{d:'AWS WAF + Shield: OWASP, bots, DDoS.',f:['OWASP rules','100 req/min/IP','Bot detection'],t:['AWS WAF','Shield']},U1:{d:'Business stakeholder: leads, traffic, engagement.',f:['One-click overview','Traffic trends'],t:['Viewer Role']},U2:{d:'Campaign & channel analysis across platforms.',f:['Cross-platform comparison','Post ranking'],t:['Manager Role']},U3:{d:'Executive ROI overview, exportable reports.',f:['Channel ROI','PDF export'],t:['Admin Role']},U4:{d:'Agency multi-tenant client management.',f:['Client switching','Per-client dashboards'],t:['Multi-tenancy']},NLQ:{d:'Parses questions, routes to Text-to-SQL.',f:['Intent classification','Schema-aware prompts','Confidence scoring'],t:['LangChain.js']},T2S:{d:'NL → SQL. Validates SELECT-only + tenant-scoped.',f:['Schema injection','SELECT whitelist','Tenant WHERE'],t:['SQL Validator']},LLM:{d:'GPT-4o for SQL, GPT-4o-mini for synthesis.',f:['Swappable models','Token tracking','Response cache'],t:['OpenAI','GPT-4o']},Cache2:{d:'AI response cache. 1hr TTL per tenant.',f:['Query fingerprint key','Hit rate monitoring'],t:['Redis']},CICD:{d:'GitHub Actions CI/CD + Terraform IaC.',f:['PR checks','Blue-green deploy','Terraform IaC'],t:['GitHub Actions','Terraform']},Logs:{d:'Pino JSON logging with tenant/request ID.',f:['JSON structured','Tenant ID per log','Datadog shipping'],t:['Pino']},Metrics:{d:'Datadog APM distributed tracing.',f:['APM tracing','Sync health dashboard','Latency p95'],t:['Datadog']},Alerts:{d:'P1→PagerDuty, P2/P3→Slack routing.',f:['Error rate alerts','Sync failure alerts','Weekly report'],t:['PagerDuty','Slack']}};
+
+/* BUILD NODES */
+const nodeMap={},clickable=[],adjMap={};
+function eOB(x){const c1=1.7,c3=c1+1;return 1+c3*Math.pow(x-1,3)+c1*Math.pow(x-1,2)}
+const bT=performance.now();
+
+ND.forEach(nd=>{
+    const a=nd.a*Math.PI/180,x=Math.cos(a)*nd.r,z=Math.sin(a)*nd.r;
+    const g=new THREE.Group();g.scale.set(.001,.001,.001);
+    const mat=new THREE.MeshStandardMaterial({color:nd.c,emissive:nd.c,emissiveIntensity:.45,roughness:.2,metalness:.8,transparent:true,opacity:1});
+    const sphere=new THREE.Mesh(new THREE.IcosahedronGeometry(nd.sz,2),mat);sphere.position.y=nd.sz;g.add(sphere);
+    sphere.userData={nid:nd.id,name:nd.n,zone:nd.z,color:nd.c};clickable.push(sphere);
+    const ring=new THREE.Mesh(new THREE.TorusGeometry(nd.sz*1.6,.012,16,64),new THREE.MeshBasicMaterial({color:nd.c,transparent:true,opacity:.3}));
+    ring.rotation.x=Math.PI/3.5;ring.rotation.z=Math.PI/6;ring.position.y=nd.sz;g.add(ring);
+    g.add(new THREE.Mesh(new THREE.CylinderGeometry(.015,.015,nd.sz,8),new THREE.MeshBasicMaterial({color:nd.c,transparent:true,opacity:.1})).translateY(nd.sz/2));
+    const el=document.createElement('div');el.className='nl';el.textContent=nd.n;el.style.setProperty('--gc',hex(nd.c));
+    const lab=new CSS2DObject(el);lab.position.set(0,-.35,0);g.add(lab);
+    g.position.set(x,.01,z);scene.add(g);
+    nodeMap[nd.id]={x,z,g,mat,ring,sphere,el,ri:nd.ri,zone:nd.z,sz:nd.sz,c:nd.c};
+});
+CONNS.forEach(([a,b])=>{if(!adjMap[a])adjMap[a]=new Set();if(!adjMap[b])adjMap[b]=new Set();adjMap[a].add(b);adjMap[b].add(a)});
+
+/* CONNECTIONS */
+const arcs=[];
+CONNS.forEach(([fid,tid])=>{
+    const f=nodeMap[fid],t=nodeMap[tid];if(!f||!t)return;
+    const dist=Math.sqrt((f.x-t.x)**2+(f.z-t.z)**2);
+    const h=Math.max(f.sz,t.sz)+Math.min(dist*.18,5.5);
+    const curve=new THREE.QuadraticBezierCurve3(new THREE.Vector3(f.x,f.sz,f.z),new THREE.Vector3((f.x+t.x)/2,h,(f.z+t.z)/2),new THREE.Vector3(t.x,t.sz,t.z));
+    const m=new THREE.MeshBasicMaterial({color:f.c,transparent:true,opacity:.05});
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve,24,.012,6,false),m));
+    arcs.push({mat:m,from:fid,to:tid});
+});
+
+/* FLOWS WITH START/END MARKERS AND ARROWS */
+const flowDefs=[
+    {id:'user',label:'User Request',nodes:['U2','CDN','WAF','NextApp','GW','Auth','RBAC','TenantMW','CoreAPI','PG'],color:0x60a5fa,speed:.04,count:30},
+    {id:'data',label:'Data Ingestion',nodes:['Scheduler','Queue','MetaC','Norm','PG'],color:0x22d3ee,speed:.05,count:22},
+    {id:'ai',label:'AI Query',nodes:['CoreAPI','NLQ','T2S','LLM'],color:0xf472b6,speed:.035,count:16},
+    {id:'ops',label:'Observability',nodes:['CoreAPI','Metrics','Alerts'],color:0x818cf8,speed:.04,count:10},
+];
+const flows={};
+
+flowDefs.forEach(fd=>{
+    const pts=fd.nodes.map(nid=>{const n=nodeMap[nid];return new THREE.Vector3(n.x,n.sz*.8,n.z)});
+    const curve=new THREE.CatmullRomCurve3(pts,false,'catmullrom',.3);
+    // Visible flow tube
+    const tMat=new THREE.MeshBasicMaterial({color:fd.color,transparent:true,opacity:0});
+    scene.add(new THREE.Mesh(new THREE.TubeGeometry(curve,80,.035,8,false),tMat));
+    // Particles
+    const offs=Array.from({length:fd.count},()=>Math.random());
+    const pa=new Float32Array(fd.count*3);const pG=new THREE.BufferGeometry();
+    pG.setAttribute('position',new THREE.BufferAttribute(pa,3));
+    const pM=new THREE.PointsMaterial({color:0xffffff,size:.22,sizeAttenuation:true,transparent:true,opacity:0,blending:THREE.AdditiveBlending});
+    scene.add(new THREE.Points(pG,pM));
+    // Direction arrows along path
+    const arrows=[];
+    for(let t=.12;t<.92;t+=.22){
+        const pt=curve.getPoint(t),tg=curve.getTangent(t).normalize();
+        const cone=new THREE.Mesh(new THREE.ConeGeometry(.1,.3,6),new THREE.MeshBasicMaterial({color:fd.color,transparent:true,opacity:0}));
+        cone.position.copy(pt);cone.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),tg);
+        scene.add(cone);arrows.push(cone);
+    }
+    // START marker
+    const sN=nodeMap[fd.nodes[0]];
+    const sEl=document.createElement('div');sEl.className='fm st';sEl.textContent='▶ START';
+    const sLab=new CSS2DObject(sEl);sLab.position.set(sN.x,sN.sz+1.4,sN.z);scene.add(sLab);
+    // END marker
+    const eN=nodeMap[fd.nodes[fd.nodes.length-1]];
+    const eEl=document.createElement('div');eEl.className='fm en';eEl.textContent='◼ END';
+    const eLab=new CSS2DObject(eEl);eLab.position.set(eN.x,eN.sz+1.4,eN.z);scene.add(eLab);
+
+    flows[fd.id]={curve,offs,pa,pG,speed:fd.speed,pM,tMat,arrows,sEl,eEl,nodeSet:new Set(fd.nodes),color:fd.color};
+});
+
+/* ZONE LABELS */
+[[180,3,'DATA LAYER',CC.data],[180,10,'API & BUSINESS LOGIC',CC.api],[180,16,'DATA PIPELINE',CC.pipe],[270,21.5,'FRONTEND + EDGE',CC.fe],[270,27,'CLIENT LAYER',CC.client],[240,13,'AI INSIGHTS',CC.ai],[120,13,'PLATFORM OPS',CC.ops]].forEach(([a,r,t,c])=>{
+    const el=document.createElement('div');el.className='zl';el.textContent=t;el.style.color=hex(c);
+    const css=new CSS2DObject(el);css.position.set(Math.cos(a*Math.PI/180)*r,.05,Math.sin(a*Math.PI/180)*r);scene.add(css);
+});
+
+/* CHAPTERS */
+const chapters=[
+    {b:'',t:'Marketing Intelligence\nPlatform',s:'',d:'Multi-Tenant SaaS Architecture — High-Level Blueprint with data flow patterns.',dur:4,cam:{p:[0,45,50],t:[0,0,0]},flow:null,stats:[]},
+    {b:'CORE',t:'Data Layer',s:'The Heart of the System',d:'PostgreSQL 16 with Row-Level Security at the center. Every query is tenant-scoped at the database kernel level. Redis Cache and S3 Object Storage flanking.',dur:5,cam:{p:[8,12,8],t:[0,0,0]},flow:null,stats:[]},
+    {b:'RING 2',t:'API &\nBusiness Logic',s:'6 Core Services',d:'API Gateway routes requests. Auth validates JWT + OAuth. RBAC enforces roles. Tenant Middleware sets RLS context. Core API handles business logic. Sync API manages data ingestion triggers.',dur:5,cam:{p:[15,14,15],t:[0,0,0]},flow:null,stats:[]},
+    {b:'RING 3',t:'Data Pipeline',s:'8 Pipeline Workers',d:'BullMQ Scheduler dispatches jobs every 6 hours. Redis Queue distributes to 4 platform connectors (Meta, Instagram, GA4, LinkedIn). Normalization Engine transforms to unified schema. Retry/DLQ handles failures.',dur:5,cam:{p:[24,18,24],t:[3,0,3]},flow:null,stats:[]},
+    {b:'RING 4-5',t:'Frontend, Edge\n& Users',s:'Dashboard + Client Layer',d:'Next.js 14 SSR dashboard with Recharts. TanStack Query for state. CloudFront CDN + AWS WAF at the edge. 4 user personas: Business Owner, Marketing Manager, CMO, and Agency.',dur:5,cam:{p:[32,22,32],t:[0,0,0]},flow:null,stats:[]},
+    {b:'SATELLITES',t:'AI Intelligence &\nPlatform Ops',s:'Side Systems',d:'AI: NL Query Engine → Text-to-SQL → GPT-4o generates SQL from plain English questions. Ops: GitHub Actions CI/CD, Pino structured logging, Datadog APM, PagerDuty/Slack alerting.',dur:5,cam:{p:[-18,16,20],t:[-5,2,0]},flow:null,stats:[]},
+    {b:'FLOW 1',t:'User Request\nPath',s:'START: Marketing Manager → END: PostgreSQL',d:'User opens dashboard → CloudFront CDN → AWS WAF → Next.js SSR → API Gateway → Auth Service → RBAC → Tenant Middleware → Core API → PostgreSQL with RLS. Every request is tenant-isolated end-to-end.',dur:7,cam:{p:[22,20,22],t:[5,0,5]},flow:'user',stats:[]},
+    {b:'FLOW 2',t:'Data Ingestion\nPath',s:'START: BullMQ Scheduler → END: PostgreSQL',d:'Every 6 hours, Scheduler dispatches sync jobs → Redis Queue → Platform connectors fetch from APIs → Normalization Engine transforms to unified schema → Stored in tenant-scoped PostgreSQL tables.',dur:7,cam:{p:[20,17,20],t:[5,0,5]},flow:'data',stats:[]},
+    {b:'FLOW 3',t:'AI Query\nPath',s:'START: Core API → END: GPT-4o / Claude',d:'User asks question in plain English → Core API routes to NL Query Engine → Text-to-SQL Pipeline generates SQL with schema injection → GPT-4o generates the query → Validated and executed against tenant data.',dur:6,cam:{p:[-12,15,18],t:[-8,2,2]},flow:'ai',stats:[]},
+    {b:'',t:'Complete\nArchitecture',s:'Secure · Scalable · Production-Ready',d:'34 components across 8 zones. Row-Level Security. 4 platform integrations. AI-powered insights. All data flows clearly defined from start to end.',dur:6,cam:{p:[32,28,32],t:[0,0,0]},flow:null,stats:[{v:'16',l:'Weeks'},{v:'6',l:'Phases'},{v:'4',l:'APIs'},{v:'~$7',l:'/Tenant'},{v:'99.9%',l:'SLA'}]},
+];
+
+// Build timeline dots
+const dotsEl=document.getElementById('tlDots');
+chapters.forEach((_,i)=>{const b=document.createElement('button');b.className='tl-dot';b.textContent=i+1;b.onclick=()=>goTo(i);dotsEl.appendChild(b)});
+
+/* CHAPTER ENGINE */
+let curCh=0,chTime=0,playing=false,started=false,selFlowId=null;
+const tPos=new THREE.Vector3(0,45,50),tTgt=new THREE.Vector3(0,0,0);
+
+function setCh(i){curCh=Math.max(0,Math.min(chapters.length-1,i));chTime=0;const ch=chapters[curCh];tPos.set(...ch.cam.p);tTgt.set(...ch.cam.t);selFlowId=ch.flow;transText(ch);updTL()}
+function goTo(i){setCh(i);oc.autoRotate=false}
+function transText(ch){
+    const o=document.getElementById('chOv');o.classList.add('hide');
+    setTimeout(()=>{document.getElementById('chB').textContent=ch.b;document.getElementById('chT').textContent=ch.t;document.getElementById('chS').textContent=ch.s;document.getElementById('chD').textContent=ch.d;
+    document.getElementById('chSt').innerHTML=(ch.stats||[]).map(s=>`<div><div class="ch-sv">${s.v}</div><div class="ch-sl">${s.l}</div></div>`).join('');
+    o.classList.remove('hide')},400);
+}
+function updTL(){document.querySelectorAll('.tl-dot').forEach((d,i)=>{d.classList.toggle('now',i===curCh);d.classList.toggle('done',i<curCh)})}
+function updTime(){
+    let e=0;for(let i=0;i<curCh;i++)e+=chapters[i].dur;e+=chTime;
+    const tot=chapters.reduce((a,c)=>a+c.dur,0);
+    const fmt=s=>Math.floor(s/60)+':'+(''+(Math.floor(s)%60)).padStart(2,'0');
+    document.getElementById('tlTime').textContent=fmt(e)+' / '+fmt(tot);
+    document.getElementById('tlFill').style.width=(e/tot*100)+'%';
+}
+
+/* RAYCASTING */
+const ray=new THREE.Raycaster(),mouse=new THREE.Vector2();
+renderer.domElement.addEventListener('click',e=>{
+    mouse.x=(e.clientX/innerWidth)*2-1;mouse.y=-(e.clientY/innerHeight)*2+1;
+    ray.setFromCamera(mouse,camera);const h=ray.intersectObjects(clickable);
+    if(h.length){const u=h[0].object.userData,det=DD[u.nid];if(!det)return;
+    document.getElementById('pd').style.background=hex(u.color);
+    document.getElementById('pt').textContent=u.name;document.getElementById('pz').textContent=u.zone;
+    document.getElementById('pp').textContent=det.d;document.getElementById('pp').style.setProperty('--gc',hex(u.color));
+    document.getElementById('pf').innerHTML=det.f.map(f=>`<li>${f}</li>`).join('');document.getElementById('pf').style.setProperty('--gc',hex(u.color));
+    document.getElementById('pk').innerHTML=det.t.map(t=>`<span class="pn-tag">${t}</span>`).join('');
+    document.getElementById('panel').classList.add('open')}
+});
+
+/* PUBLIC API */
+W_.startPlay=()=>{document.getElementById('startOv').classList.add('gone');started=true;playing=true;setCh(0);document.getElementById('tlPlay').textContent='⏸'};
+W_.togglePlay=()=>{if(!started){W_.startPlay();return}if(curCh>=chapters.length-1&&!playing){playing=true;setCh(0);document.getElementById('tlPlay').textContent='⏸';return}playing=!playing;document.getElementById('tlPlay').textContent=playing?'⏸':'▶'};
+W_.replay=()=>{started=true;playing=true;oc.autoRotate=false;setCh(0);document.getElementById('startOv').classList.add('gone');document.getElementById('tlPlay').textContent='⏸'};
+W_.reset=()=>{playing=false;selFlowId=null;oc.autoRotate=true;tPos.set(32,28,32);tTgt.set(0,0,0);setCh(chapters.length-1);document.getElementById('tlPlay').textContent='↺';W_.closeP()};
+W_.closeP=()=>document.getElementById('panel').classList.remove('open');
+W_.selFlow=(id)=>{selFlowId=selFlowId===id?null:id;playing=false;document.getElementById('tlPlay').textContent='▶'};
+
+/* ANIMATION */
+const clock=new THREE.Clock();
+function animate(){
+    requestAnimationFrame(animate);
+    const dt=Math.min(clock.getDelta(),.05),t=clock.getElapsedTime();
+    const elapsed=(performance.now()-bT)/1000;
+
+    // Chapter auto-advance
+    if(playing&&started){chTime+=dt;if(chTime>=chapters[curCh].dur){if(curCh<chapters.length-1)setCh(curCh+1);else{playing=false;oc.autoRotate=true;document.getElementById('tlPlay').textContent='↺'}}}
+
+    // Camera
+    camera.position.lerp(tPos,.02);oc.target.lerp(tTgt,.02);oc.update();
+
+    // Entrance
+    for(const id in nodeMap){const nd=nodeMap[id];const ap=nd.ri*.45;const p=Math.max(0,Math.min(1,(elapsed-ap)/.6));nd.g.scale.setScalar(p<1?eOB(p):1)}
+
+    // Pulse
+    pulses.forEach((p,i)=>{const ph=(t*.7+i*1.5)%4.5;p.scale.set(ph*6.5,ph*6.5,1);p.material.opacity=Math.max(0,.15*(1-ph/4.5))});
+
+    // Active flow set
+    const af=selFlowId;const afFlow=af?flows[af]:null;
+    const afNodes=afFlow?afFlow.nodeSet:null;
+
+    // Node visibility
+    for(const id in nodeMap){
+        const nd=nodeMap[id];
+        let bright=!afNodes||afNodes.has(id);
+        nd.mat.opacity=THREE.MathUtils.lerp(nd.mat.opacity,bright?1:.08,.06);
+        nd.mat.emissiveIntensity=THREE.MathUtils.lerp(nd.mat.emissiveIntensity,bright?.45:.03,.06);
+        nd.ring.material.opacity=THREE.MathUtils.lerp(nd.ring.material.opacity,bright?.3:.02,.06);
+        nd.el.classList.toggle('dim',!bright);
+        nd.sphere.position.y=nd.sz+Math.sin(t*1.2+nd.x*.3)*.05;
+        nd.ring.rotation.y=t*.3+nd.z*.1;
+    }
+
+    // Arc visibility
+    arcs.forEach(a=>{
+        let vis=!afNodes||(afNodes.has(a.from)&&afNodes.has(a.to));
+        a.mat.opacity=THREE.MathUtils.lerp(a.mat.opacity,vis?(afNodes?.15:.05):.005,.06);
+    });
+
+    // Flows
+    for(const fid in flows){
+        const f=flows[fid];const active=(af===fid);
+        const targetTube=active?.25:0;const targetPart=active?.85:0;
+        f.tMat.opacity=THREE.MathUtils.lerp(f.tMat.opacity,targetTube,.04);
+        f.pM.opacity=THREE.MathUtils.lerp(f.pM.opacity,targetPart,.04);
+        f.arrows.forEach(a=>{a.material.opacity=THREE.MathUtils.lerp(a.material.opacity,active?.6:0,.04)});
+        f.sEl.classList.toggle('vis',active);
+        f.eEl.classList.toggle('vis',active);
+        if(active){
+            for(let i=0;i<f.offs.length;i++){f.offs[i]=(f.offs[i]+dt*f.speed)%1;const pt=f.curve.getPoint(f.offs[i]);f.pa[i*3]=pt.x;f.pa[i*3+1]=pt.y;f.pa[i*3+2]=pt.z}
+            f.pG.attributes.position.needsUpdate=true;
+        }
+    }
+
+    updTime();composer.render();labelR.render(scene,camera);
+}
+
+document.addEventListener('keydown',e=>{if(e.code==='Space'){e.preventDefault();W_.togglePlay()}if(e.code==='KeyR')W_.replay();if(e.code==='ArrowRight'&&curCh<chapters.length-1)goTo(curCh+1);if(e.code==='ArrowLeft'&&curCh>0)goTo(curCh-1);if(e.code==='Escape')W_.closeP()});
+window.addEventListener('resize',()=>{camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);labelR.setSize(innerWidth,innerHeight);composer.setSize(innerWidth,innerHeight)});
+animate();
+</script>
+</body>
+</html>
